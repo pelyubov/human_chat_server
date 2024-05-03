@@ -1,10 +1,10 @@
-class Message {
+export default class Message {
   id: BigInt;
   content: string;
   type: string;
   createdAt: Date;
   replyTo?: BigInt;
-  attrachments?: string[];
+  attachments?: string[];
   isDeleted? = false;
   constructor(
     id: BigInt,
@@ -20,7 +20,7 @@ class Message {
     this.type = type;
     this.createdAt = createdAt;
     this.replyTo = replyTo;
-    this.attrachments = attrachments;
+    this.attachments = attrachments;
     this.isDeleted = isDeleted;
   }
 }

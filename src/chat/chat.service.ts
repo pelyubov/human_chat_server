@@ -1,12 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { IChatService } from './interfaces/chat.interface.service';
 import { GroupChat } from 'src/chat/entities/groupchat';
-import { User } from 'src/user/entities/user';
+import { User } from 'src/user/entities/user.enity';
+import { IChatService } from './interfaces/chat.interface.service';
 
 @Injectable()
 export class ChatService implements IChatService {
   create(id: BigInt, name: string, avatar: string, members: User[]): Promise<boolean> {
-    WebSocket;
     throw new Error('Method not implemented.');
   }
   get(id: BigInt): Promise<GroupChat> {

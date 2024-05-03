@@ -1,12 +1,13 @@
-export class User {
+export default class User {
   id: BigInt;
   name: string;
-  nickname?: string;
+  username?: string;
   email: string;
   password: string;
   avatar?: string;
   status: boolean;
   isDeleted: boolean;
+  friends: BigInt[];
   constructor(
     id: BigInt,
     name: string,
@@ -14,16 +15,18 @@ export class User {
     password: string,
     status: boolean,
     isDeleted: boolean,
-    nickname?: string,
+    friends: BigInt[],
+    username?: string,
     avatar?: string,
   ) {
     this.id = id;
     this.name = name;
-    this.nickname = nickname;
+    username && (this.username = username);
     this.email = email;
     this.password = password;
-    this.avatar = avatar;
+    avatar && (this.avatar = avatar);
     this.status = status;
     this.isDeleted = isDeleted;
+    this.friends = friends;
   }
 }

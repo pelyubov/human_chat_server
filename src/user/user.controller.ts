@@ -1,11 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
-import { IUserService } from './interfaces/user.interface.service';
-import { User } from './entities/user';
+import { Body, Controller, Delete, Get, Param, Put } from '@nestjs/common';
 import { UserDto } from './dtos/user.dto';
+import User from './entities/user.enity';
+import { UserService } from './user.service';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: IUserService) {}
+  constructor(private readonly userService: UserService) {}
 
   @Get('get/:id')
   async getUser(@Param('id') id: BigInt): Promise<User> {
@@ -13,10 +13,10 @@ export class UserController {
     return user;
   }
 
-  @Post('create')
-  async createUser(@Body() user: UserDto): Promise<boolean> {
-    return this.userService.create(BigInt(1), user);
-  }
+  // @Post('create')
+  // async createUser(@Body() user: UserDto): Promise<boolean> {
+  //   return this.userService.create(BigInt(1), user);
+  // }
 
   @Put('update/:id')
   async updateUser(@Param('id') id: BigInt, @Body() user: UserDto): Promise<boolean> {
