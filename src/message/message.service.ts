@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import dummyDB from 'src/core/db/db_test';
-import { Message } from '../entities/message';
 import { CreateMessageDto } from './dtos/createMessage.dto';
 import { EditMessageDto } from './dtos/editMessage.dto';
+import { Message } from './message.entity';
 import { IMessageService } from './message.interface.service';
 
 @Injectable()

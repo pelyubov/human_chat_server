@@ -1,6 +1,6 @@
-import { Message } from '../entities/message';
 import { CreateMessageDto } from './dtos/createMessage.dto';
 import { EditMessageDto } from './dtos/editMessage.dto';
+import { Message } from './message.entity';
 
 export interface IMessageService {
   create(id: BigInt, input: CreateMessageDto): Promise<Message>;

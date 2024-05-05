@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { GroupChat } from 'src/chat/entities/groupchat';
 import { User } from 'src/user/entities/user.enity';
 import { IChatService } from './interfaces/chat.interface.service';
+import { GroupChat } from './entities/groupchat.entity';
 
 @Injectable()
 export class ChatService implements IChatService {

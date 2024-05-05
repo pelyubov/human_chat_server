@@ -9,6 +9,9 @@ import { User } from './entities/user.enity';
 export class UserService {
   constructor(private readonly userDbContext: UserDbContext) {}
   async create(user: CreateUserDto): Promise<any> {
+    if (await this.exist(user.email)) {
+      throw new Error('User already exists');
+    }
     return await this.userDbContext.createUser(user);
   }
 
@@ -28,6 +31,9 @@ export class UserService {
 
   async get(id: BigInt): Promise<GetUserDto> {
     const userInfo = await this.userDbContext.getUser(id);
+    if (!userInfo) {
+      throw new Error('User not found');
+    }
     const user = new GetUserDto(
       userInfo.id,
       userInfo.name,

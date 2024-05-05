@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  HttpException,
   HttpStatus,
   Post,
   Request,
@@ -20,14 +21,22 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('login')
   signIn(@Body() signInDto: Record<string, any>) {
-    return this.authService.signIn(signInDto.email, signInDto.password);
+    try {
+      return this.authService.signIn(signInDto.email, signInDto.password);
+    } catch (error) {
+      throw new HttpException(error.message, 409);
+    }
   }
 
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('register')
   async signUp(@Body() signUpDto: CreateUserDto) {
-    return this.authService.signUp(signUpDto);
+    try {
+      await this.authService.signUp(signUpDto);
+    } catch (error) {
+      throw new HttpException(error.message, 409);
+    }
   }
 
   @UseGuards(AuthGuard)

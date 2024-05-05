@@ -1,6 +1,6 @@
 import { Client } from 'cassandra-driver';
 import { Consumer, Producer } from 'kafkajs';
-import { Message } from '../entities/message';
+import { Message } from './message.entity';
 
 type QueriesFieldGetMessage = {
   id?: BigInt;
@@ -38,6 +38,12 @@ export default class MessageDbContext {
           value: JSON.stringify({ id: messageId }),
         },
       ],
+    });
+    this.consumer.subscribe({ topic: 'get-message', fromBeginning: true });
+    this.consumer.run({
+      eachMessage: async ({ message }) => {
+        console.log(message.value.toString());
+      },
     });
   }
 
