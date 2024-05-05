@@ -3,7 +3,7 @@ import UserDbContext from './db/user.db';
 import { CreateUserDto } from './dtos/createUser.dto';
 import { GetUserDto } from './dtos/getUser.dto';
 import { UpdateUserDto } from './dtos/updateUser.dto';
-import User from './entities/user.enity';
+import { User } from './entities/user.enity';
 
 @Injectable()
 export class UserService {

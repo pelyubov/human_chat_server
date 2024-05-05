@@ -1,6 +1,6 @@
-import User from 'src/user/user.enity';
+import { User } from 'src/user/entities/user.enity';
 
-export default class GroupChat {
+export class GroupChat {
   id: BigInt;
   name: string;
   photo: string;

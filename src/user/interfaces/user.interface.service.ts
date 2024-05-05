@@ -1,5 +1,5 @@
 import { CreateUserDto } from '../dtos/createUser.dto';
-import User from '../entities/user.enity';
+import { User } from '../entities/user.enity';
 
 export interface IUserService {
   get(id: BigInt): Promise<User>;

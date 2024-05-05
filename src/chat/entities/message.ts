@@ -1,4 +1,4 @@
-export default class Message {
+export class Message {
   id: BigInt;
   content: string;
   type: string;

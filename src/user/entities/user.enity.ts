@@ -1,4 +1,4 @@
-export default class User {
+export class User {
   id: BigInt;
   name: string;
   username?: string;

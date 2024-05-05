@@ -5,7 +5,7 @@ import KafkaDbContext from 'src/core/db/kafka.db';
 import TableDbContext from 'src/core/db/table.db';
 import { CreateUserDto } from '../dtos/createUser.dto';
 import { UpdateUserDto } from '../dtos/updateUser.dto';
-import User from '../entities/user.enity';
+import { User } from '../entities/user.enity';
 
 type QueriesFieldGetUser = {
   id?: BigInt;

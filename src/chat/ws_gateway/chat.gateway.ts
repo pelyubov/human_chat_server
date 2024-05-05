@@ -8,9 +8,9 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
-import { CreateMessageDto } from './dtos/create_message.dto';
+import { CreateMessageDto } from './dtos/createMessage.dto';
+import { EditMessageDto } from './dtos/editMessage.dto';
 import { IMessageService } from './message.interface.service';
-import { EditMessageDto } from './dtos/edit_message.dto';
 import { MessageService } from './message.service';
 
 @WebSocketGateway({
@@ -68,9 +68,13 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   @SubscribeMessage('messages')
-  async onMessages(@MessageBody() data: { sender: BigInt; receiver: BigInt; input: CreateMessageDto }) {
+  async onMessages(
+    @MessageBody() data: { sender: BigInt; receiver: BigInt; input: CreateMessageDto },
+  ) {
     const message = await this.messageService.create(data.sender, data.input);
-    this.io.to(data.receiver.toString()).emit('recieveMessages', { sender: data.sender, message: message });
+    this.io
+      .to(data.receiver.toString())
+      .emit('recieveMessages', { sender: data.sender, message: message });
   }
 
   @SubscribeMessage('editMessage')
