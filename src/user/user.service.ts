@@ -1,64 +1,82 @@
 import { Injectable } from '@nestjs/common';
-import dummyDB from 'src/core/db/db_test';
-import { UserDto } from './dtos/user.dto';
+import UserDbContext from './db/user.db';
+import { CreateUserDto } from './dtos/createUser.dto';
+import { GetUserDto } from './dtos/getUser.dto';
+import { UpdateUserDto } from './dtos/updateUser.dto';
 import User from './entities/user.enity';
-import { IUserService } from './interfaces/user.interface.service';
 
 @Injectable()
-export class UserService implements IUserService {
-  dummyUserData: any;
-  constructor() {
-    this.dummyUserData = dummyDB.users;
+export class UserService {
+  constructor(private readonly userDbContext: UserDbContext) {}
+  async create(user: CreateUserDto): Promise<any> {
+    return await this.userDbContext.createUser(user);
   }
 
-  get(id: BigInt): Promise<User> {
-    for (const user of this.dummyUserData) {
-      if (user.id === id) {
-        return Promise.resolve(user);
-      }
+  async exist(email: string) {
+    const user = await this.userDbContext.getUserByEmail(email);
+    if (user) {
+      return Promise.resolve(true);
+    } else {
+      return Promise.resolve(false);
     }
-    return Promise.resolve(null);
   }
-  update(id: BigInt, userInfo: UserDto): Promise<boolean> {
-    for (const user of this.dummyUserData) {
-      if (user.id === id) {
-        user.name = userInfo.name;
-        user.email = userInfo.email;
-        user.password = userInfo.password;
-        user.username = userInfo.username;
-        user.avatar = userInfo.avatar;
-        user.status = userInfo.status;
-        return Promise.resolve(true);
-      }
+
+  async login(email: string, password: string) {
+    const user = await this.userDbContext.getUserByEmailAndPassword(email, password);
+    return user;
+  }
+
+  async get(id: BigInt): Promise<GetUserDto> {
+    const userInfo = await this.userDbContext.getUser(id);
+    const user = new GetUserDto(
+      userInfo.id,
+      userInfo.name,
+      userInfo.email,
+      userInfo.status,
+      userInfo.isDeleted,
+      userInfo.username,
+      userInfo.avatar,
+    );
+    return Promise.resolve(user);
+  }
+  async update(id: BigInt, userInfo: UpdateUserDto): Promise<boolean> {
+    const findUser = await this.userDbContext.getUser(id);
+    if (!findUser) {
+      throw new Error('User not found');
     }
-    return Promise.resolve(false);
+    await this.userDbContext.updateUser(id, userInfo);
+    return Promise.resolve(true);
   }
-  delete(id: BigInt): Promise<boolean> {
-    for (const user of this.dummyUserData) {
-      if (user.id === id) {
-        user.isDeleted = true;
-        return Promise.resolve(true);
-      }
+  async delete(id: BigInt): Promise<boolean> {
+    const findUser = await this.userDbContext.getUser(id);
+    if (!findUser) {
+      throw new Error('User not found');
     }
-    return Promise.resolve(false);
+    await this.userDbContext.deleteUser(id);
+    return Promise.resolve(true);
   }
-  getFriends(id: BigInt): Promise<User[]> {
-    for (const user of this.dummyUserData) {
-      if (user.id === id) {
-        let friends = [];
-        for (const friendId of user.friends) {
-          for (const friend of this.dummyUserData) {
-            if (friend.id === friendId) {
-              friends.push(friend);
-            }
-          }
-        }
-        return Promise.resolve(friends);
-      }
+  async getFriends(id: BigInt): Promise<GetUserDto[]> {
+    const findUser = await this.userDbContext.getUser(id);
+    if (!findUser) {
+      throw new Error('User not found');
     }
-    return Promise.resolve(null);
+    const friends = await this.userDbContext.getFriends(id);
+    return Promise.resolve(
+      friends.map(
+        (friend) =>
+          new GetUserDto(
+            friend.id,
+            friend.name,
+            friend.email,
+            friend.status,
+            friend.isDeleted,
+            friend.username,
+            friend.avatar,
+          ),
+      ),
+    );
   }
-  getStrangers(id: BigInt): Promise<User[]> {
+  async getStrangers(id: BigInt): Promise<User[]> {
     throw new Error('Method not implemented.');
   }
 }

@@ -1,36 +1,45 @@
 import { Injectable } from '@nestjs/common';
-import dummyDB from 'src/core/db/db_test';
-import { UserDto } from 'src/user/dtos/user.dto';
-import User from 'src/user/entities/user.enity';
-import { IAuthService } from './auth.interface.service';
+import { JwtService } from '@nestjs/jwt';
+import { CreateUserDto } from 'src/user/dtos/createUser.dto';
+import { UserService } from 'src/user/user.service';
+import { HashingPassword } from './hassingPassword';
 
 @Injectable()
-export class AuthService implements IAuthService {
-  dummyUserData: any;
-  constructor() {
-    this.dummyUserData = dummyDB.users;
-  }
-  register(userInfo: UserDto): Promise<boolean> {
-    const user: User = {
-      id: dummyDB.snowflake.nextId(),
-      name: userInfo.name,
-      email: userInfo.email,
-      password: userInfo.password,
-      username: userInfo.username,
-      avatar: userInfo.avatar,
-      status: userInfo.status,
-      isDeleted: false,
-      friends: [],
-    };
-    this.dummyUserData.push(user);
-    return Promise.resolve(true);
-  }
-  login(email: string, password: string): Promise<User> {
-    for (const user of this.dummyUserData) {
-      if (user.email === email && user.password === password) {
-        return Promise.resolve<User>(user);
-      }
+export class AuthService {
+  constructor(
+    private readonly userService: UserService,
+    private jwtService: JwtService,
+  ) {}
+  async signIn(email: string, password: string): Promise<any> {
+    const user = await this.userService.login(email, password);
+    if (!user || user.isDeleted) {
+      throw new Error('User not found');
     }
-    return Promise.resolve(null);
+    if (await HashingPassword.comparePassword(password, user.password)) {
+      throw new Error('Password is incorrect');
+    }
+    const payload = {
+      id: user.id,
+      email: user.email,
+    };
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+    };
+  }
+
+  async signUp(signUpDto: CreateUserDto): Promise<any> {
+    const exist = await this.userService.exist(signUpDto.email);
+    if (exist) {
+      throw new Error('User already exists');
+    }
+    signUpDto.password = await HashingPassword.hashPassword(signUpDto.password);
+    const user = await this.userService.create(signUpDto);
+    const payload = {
+      id: user.id,
+      email: user.email,
+    };
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+    };
   }
 }

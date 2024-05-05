@@ -1,3 +1,4 @@
+import Message from '../entities/message';
 import { CreateMessageDto } from './dtos/create_message.dto';
 import { EditMessageDto } from './dtos/edit_message.dto';
 

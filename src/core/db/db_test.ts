@@ -1,7 +1,7 @@
-import GroupChat from 'src/chat/entities/groupchat';
-import User from 'src/user/entities/user.enity';
-import Snowflex from '../utils/snowflake';
 import { Message } from 'kafkajs';
+import GroupChat from 'src/chat/entities/groupchat';
+import User from 'src/user/user.enity';
+import Snowflex from '../utils/snowflake';
 
 const snowflake = new Snowflex(1, 1);
 

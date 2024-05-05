@@ -3,7 +3,8 @@ import { Consumer, Producer } from 'kafkajs';
 import GraphDBContext, { GraphTraversalSource } from 'src/core/db/graph.db';
 import KafkaDbContext from 'src/core/db/kafka.db';
 import TableDbContext from 'src/core/db/table.db';
-import Snowflex from 'src/core/utils/snowflake';
+import { CreateUserDto } from '../dtos/createUser.dto';
+import { UpdateUserDto } from '../dtos/updateUser.dto';
 import User from '../entities/user.enity';
 
 type QueriesFieldGetUser = {
@@ -22,8 +23,8 @@ type OutputFieldGetUser = {
   isDeleted?: boolean;
 };
 
-type UserId = Snowflex;
-type FriendsId = Snowflex;
+type UserId = BigInt;
+type FriendId = BigInt;
 
 interface IUserDbContext {
   getUsersByContainSubKeyword<O = OutputFieldGetUser>(
@@ -34,13 +35,12 @@ interface IUserDbContext {
   createUser(user: User): Promise<UserId>;
   updateUser(user: User): Promise<UserId>;
   deleteUser(userId: UserId): Promise<UserId>;
-  getFriends(userId: UserId): Promise<FriendsId[]>;
-  getFriendsId(userId: UserId): Promise<FriendsId[]>;
+  getFriends(userId: UserId): Promise<FriendId[]>;
+  getFriendsId(userId: UserId): Promise<FriendId[]>;
 }
 
 export default class UserDbContext {
   private static _instance: UserDbContext;
-
   private tableName = 'users';
   constructor(
     private g?: GraphTraversalSource,
@@ -84,6 +84,12 @@ export default class UserDbContext {
     return user.rows[0];
   }
 
+  async getUserByEmail(email: string): Promise<any> {
+    const result = `Select * from ${this.tableName} where email = '${email}';`;
+    const user = await this.table.execute(result);
+    return user.rows[0];
+  }
+
   async getUsers(ids: UserId[]): Promise<any> {
     let users = [];
     for (const id of ids) {
@@ -99,21 +105,26 @@ export default class UserDbContext {
       messages: [{ value: JSON.stringify(userId) }],
     });
   }
-  updateUser(updatedUser: User): void {
+  updateUser(userId: UserId, updateUser: UpdateUserDto): void {
     this.producer.send({
       topic: 'update-user',
-      messages: [{ value: JSON.stringify(updatedUser) }],
+      messages: [{ value: JSON.stringify({ id: userId, updateUser }) }],
     });
   }
-  createUser(newUser: User): void {
+  createUser(newUser: CreateUserDto): void {
     this.producer.send({
       topic: 'create-user',
       messages: [{ value: JSON.stringify(newUser) }],
     });
   }
 
-  private getFriendsId(userId: UserId): FriendsId[] {
-    const friendsId: FriendsId[] = [];
+  getUserByEmailAndPassword(email: string, password: string): Promise<any> {
+    const query = `Select * from ${this.tableName} where email = '${email}' and password = '${password}';`;
+    return this.table.execute(query);
+  }
+
+  private getFriendsId(userId: UserId): FriendId[] {
+    const friendsId: FriendId[] = [];
     // TODO complete friends id query
     // this.g
     //   .V()

@@ -1,32 +1,38 @@
-import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
+import { CreateUserDto } from 'src/user/dtos/createUser.dto';
+import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
-import { UserDto } from 'src/user/dtos/user.dto';
-import { LoginUser } from './dtos/login.dto';
+import { Public } from './decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private authService: AuthService) {}
 
-  @Post('register')
-  async register(@Body() data: UserDto) {
-    return await this.authService.register(data);
+  @HttpCode(HttpStatus.OK)
+  @Post('login')
+  signIn(@Body() signInDto: Record<string, any>) {
+    return this.authService.signIn(signInDto.email, signInDto.password);
   }
 
-  @Post('login')
-  async login(@Body() data: { email: string; password: string }) {
-    const user = await this.authService.login(data.email, data.password);
-    if (!user) throw new BadRequestException('User does not exist or password is incorrect');
-    const result = new LoginUser(
-      user.id,
-      user.name,
-      user.email,
-      user.password,
-      user.status,
-      user.isDeleted,
-      user.friends,
-      user.username,
-      user.avatar,
-    );
-    return result;
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @Post('register')
+  async signUp(@Body() signUpDto: CreateUserDto) {
+    return this.authService.signUp(signUpDto);
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('profile')
+  getProfile(@Request() req) {
+    return req.user;
   }
 }

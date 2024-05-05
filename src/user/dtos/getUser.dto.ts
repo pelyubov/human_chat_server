@@ -1,32 +1,26 @@
-export class LoginUser {
-  id: string;
+export class GetUserDto {
+  id: BigInt;
   name: string;
+  username?: string;
   email: string;
-  password: string;
+  avatar?: string;
   status: boolean;
   isDeleted: boolean;
-  friends: BigInt[];
-  username?: string;
-  avatar?: string;
   constructor(
     id: BigInt,
     name: string,
     email: string,
-    password: string,
     status: boolean,
     isDeleted: boolean,
-    friends: BigInt[],
     username?: string,
     avatar?: string,
   ) {
-    this.id = id.toString();
+    this.id = id;
     this.name = name;
+    this.username = username;
     this.email = email;
-    this.password = password;
+    this.avatar = avatar;
     this.status = status;
     this.isDeleted = isDeleted;
-    this.friends = friends;
-    username && (this.username = username);
-    avatar && (this.avatar = avatar);
   }
 }
