@@ -1,20 +1,24 @@
 import { Client } from 'cassandra-driver';
+import { config } from 'dotenv';
 import IDbContext from './db.abstract';
 import DbState from './state.db';
+config();
 
 const {
-  CASSANDRA_HOST: HOST,
-  CASSANDRA_PORT: PORT,
-  CASSANDRA_LOCAL_DATACENTER: LOCAL_DATACENTER,
-  CASSANDRA_KEYSPACE,
+  ADDRESS1: host1,
+  ADDRESS2: host2,
+  ADDRESS3: host3,
+  SCYLLA_PORT: scyllaPort,
+  CASSANDRA_LOCAL_DATACENTER: localDatacenter,
+  CASSANDRA_KEYSPACE: cassandraKeyspace,
 } = process.env;
 
-const endpoint = `${HOST}:${PORT}`;
+const contactPoints = [host1, host2, host3].map((host, i) => `${host}:${scyllaPort}`);
 
 const client = new Client({
-  contactPoints: [endpoint],
-  localDataCenter: LOCAL_DATACENTER,
-  keyspace: CASSANDRA_KEYSPACE,
+  contactPoints: contactPoints,
+  localDataCenter: localDatacenter,
+  keyspace: cassandraKeyspace,
 });
 
 export default class TableDbContext extends IDbContext {
@@ -61,6 +65,8 @@ export default class TableDbContext extends IDbContext {
       }
     });
   }
+
+  protected test() {}
 
   protected async disconnect(): Promise<void> {
     await this._client.shutdown();
