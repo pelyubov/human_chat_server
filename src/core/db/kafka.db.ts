@@ -1,21 +1,23 @@
+import { config } from 'dotenv';
 import { Consumer, ConsumerConfig, Kafka, KafkaConfig, Producer, ProducerConfig } from 'kafkajs';
 import IDbContext from './db.abstract';
 import DbState from './state.db';
+config();
 
 const {
   KAFKA_CLIENT_ID: kafkaClientId,
   KAFKA_GROUP_ID: kafkaGroupId,
-  KAFKA_NAT_BROKER0: kafkaNatBroker0,
-  KAFKA_NAT_BROKER1: kafkaNatBroker1,
+  ADDRESS1: kafkaNatBroker0,
+  ADDRESS2: kafkaNatBroker1,
+  KAFKA_PORT: kafkaPort,
 } = process.env;
 
-const NAT_BROKERS = [kafkaNatBroker0, kafkaNatBroker1].map((broker, i) => `${broker}:${2 + i}9093`); // work but has to manually add to /etc/hosts
-
-const clientId = kafkaClientId;
-const groupId = kafkaGroupId;
+const NAT_BROKERS = [kafkaNatBroker0, kafkaNatBroker1].map(
+  (broker, i) => `${broker}:${2 + i}${kafkaPort}`,
+); // work but has to manually add to /etc/hosts
 
 const kafkaConfig: KafkaConfig = {
-  clientId: clientId,
+  clientId: kafkaClientId,
   brokers: NAT_BROKERS,
 };
 
@@ -24,7 +26,7 @@ const produceConfig: ProducerConfig = {
 };
 
 const consumerConfig: ConsumerConfig = {
-  groupId: groupId,
+  groupId: kafkaGroupId,
 };
 
 export default class KafkaDbContext extends IDbContext {
