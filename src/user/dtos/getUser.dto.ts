@@ -1,5 +1,5 @@
 export class GetUserDto {
-  id: BigInt;
+  id: bigint;
   name: string;
   username?: string;
   email: string;
@@ -7,7 +7,7 @@ export class GetUserDto {
   status: boolean;
   isDeleted: boolean;
   constructor(
-    id: BigInt,
+    id: bigint,
     name: string,
     email: string,
     status: boolean,

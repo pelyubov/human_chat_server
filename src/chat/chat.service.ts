@@ -5,22 +5,22 @@ import { IChatService } from './interfaces/chat.interface.service';
 
 @Injectable()
 export class ChatService implements IChatService {
-  create(id: BigInt, name: string, avatar: string, members: User[]): Promise<boolean> {
+  create(id: bigint, name: string, avatar: string, members: User[]): Promise<boolean> {
     throw new Error('Method not implemented.');
   }
-  get(id: BigInt): Promise<GroupChat> {
+  get(id: bigint): Promise<GroupChat> {
     throw new Error('Method not implemented.');
   }
-  update(id: BigInt, name: string, avatar: string): Promise<boolean> {
+  update(id: bigint, name: string, avatar: string): Promise<boolean> {
     throw new Error('Method not implemented.');
   }
-  delete(id: BigInt): Promise<boolean> {
+  delete(id: bigint): Promise<boolean> {
     throw new Error('Method not implemented.');
   }
-  getChatList(userID: BigInt): Promise<GroupChat[]> {
+  getChatList(userID: bigint): Promise<GroupChat[]> {
     throw new Error('Method not implemented.');
   }
-  getUserInGroup(groupID: BigInt): Promise<User[]> {
+  getUserInGroup(groupID: bigint): Promise<User[]> {
     throw new Error('Method not implemented.');
   }
 }

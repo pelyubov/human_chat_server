@@ -1,5 +1,5 @@
 export class User {
-  id: BigInt;
+  id: bigint;
   name: string;
   username?: string;
   email: string;
@@ -7,15 +7,15 @@ export class User {
   avatar?: string;
   status: boolean;
   isDeleted: boolean;
-  friends: BigInt[];
+  friends: bigint[];
   constructor(
-    id: BigInt,
+    id: bigint,
     name: string,
     email: string,
     password: string,
     status: boolean,
     isDeleted: boolean,
-    friends: BigInt[],
+    friends: bigint[],
     username?: string,
     avatar?: string,
   ) {

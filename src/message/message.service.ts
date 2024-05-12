@@ -13,7 +13,7 @@ export class MessageService implements IMessageService {
     this.dummyMessages = dummyDB.messages;
   }
 
-  create(id: BigInt, input: CreateMessageDto): Promise<Message> {
+  create(id: bigint, input: CreateMessageDto): Promise<Message> {
     const newMessage: Message = {
       id: id,
       content: input.content,
@@ -33,7 +33,7 @@ export class MessageService implements IMessageService {
     return Promise.resolve(newMessage);
   }
 
-  get(id: BigInt): Promise<Message> {
+  get(id: bigint): Promise<Message> {
     for (const message of this.dummyMessages) {
       if (message.id === id) {
         return Promise.resolve(message);
@@ -42,7 +42,7 @@ export class MessageService implements IMessageService {
     return Promise.resolve(null);
   }
 
-  delete(id: BigInt): Promise<boolean> {
+  delete(id: bigint): Promise<boolean> {
     for (const message of this.dummyMessages) {
       if (message.id === id) {
         message.isDeleted = true;
@@ -51,7 +51,7 @@ export class MessageService implements IMessageService {
     }
     return Promise.resolve(false);
   }
-  edit(id: BigInt, input: EditMessageDto): Promise<boolean> {
+  edit(id: bigint, input: EditMessageDto): Promise<boolean> {
     for (const message of this.dummyMessages) {
       if (message.id === id) {
         message.content = input.content;

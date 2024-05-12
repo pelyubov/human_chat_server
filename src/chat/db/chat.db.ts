@@ -4,12 +4,12 @@ import { GraphTraversalSource } from 'src/core/db/graph.db';
 import { GroupChat } from '../entities/chat.entity';
 
 interface IChatDbContext {
-  create(id: BigInt, name: string, avatar: string, members: BigInt[]): Promise<any>;
-  get(id: BigInt): Promise<GroupChat>;
-  update(id: BigInt, name: string, avatar: string, members: BigInt[]): Promise<any>;
-  delete(id: BigInt): Promise<any>;
-  getChatList(userID: BigInt): Promise<GetChatInfoDto[]>;
-  getUsersIdInGroup(groupID: BigInt): Promise<BigInt[]>;
+  create(id: bigint, name: string, avatar: string, members: bigint[]): Promise<any>;
+  get(id: bigint): Promise<GroupChat>;
+  update(id: bigint, name: string, avatar: string, members: bigint[]): Promise<any>;
+  delete(id: bigint): Promise<any>;
+  getChatList(userID: bigint): Promise<GetChatInfoDto[]>;
+  getUsersIdInGroup(groupID: bigint): Promise<bigint[]>;
 }
 
 export class ChatDbContext implements IChatDbContext {
@@ -27,7 +27,7 @@ export class ChatDbContext implements IChatDbContext {
 
     ChatDbContext._instance = this;
   }
-  async create(id: BigInt, name: string, avatar: string, members: BigInt[]): Promise<any> {
+  async create(id: bigint, name: string, avatar: string, members: bigint[]): Promise<any> {
     return await this.producer.send({
       topic: 'create-chat',
       messages: [
@@ -37,12 +37,12 @@ export class ChatDbContext implements IChatDbContext {
       ],
     });
   }
-  async get(id: BigInt): Promise<GroupChat> {
+  async get(id: bigint): Promise<GroupChat> {
     const query = 'Select * from ' + this.tableName + ` where id = ${id}`;
     const result = await this.table.execute(query);
     throw new Error('Method not implemented.');
   }
-  async update(id: BigInt, name: string, avatar: string, members: BigInt[]): Promise<any> {
+  async update(id: bigint, name: string, avatar: string, members: bigint[]): Promise<any> {
     return await this.producer.send({
       topic: 'update-chat',
       messages: [
@@ -52,7 +52,7 @@ export class ChatDbContext implements IChatDbContext {
       ],
     });
   }
-  async delete(id: BigInt): Promise<any> {
+  async delete(id: bigint): Promise<any> {
     return await this.producer.send({
       topic: 'delete-chat',
       messages: [
@@ -62,7 +62,7 @@ export class ChatDbContext implements IChatDbContext {
       ],
     });
   }
-  async getChatList(userID: BigInt): Promise<GetChatInfoDto[]> {
+  async getChatList(userID: bigint): Promise<GetChatInfoDto[]> {
     await this.producer.send({
       topic: 'get-chat-list',
       messages: [
@@ -73,7 +73,7 @@ export class ChatDbContext implements IChatDbContext {
     });
     throw new Error('Method not implemented.');
   }
-  getUsersIdInGroup(groupID: BigInt): Promise<BigInt[]> {
+  getUsersIdInGroup(groupID: bigint): Promise<bigint[]> {
     throw new Error('Method not implemented.');
   }
 

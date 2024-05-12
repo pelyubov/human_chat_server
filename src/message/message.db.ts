@@ -3,10 +3,10 @@ import { Consumer, Producer } from 'kafkajs';
 import { Message } from './message.entity';
 
 type QueriesFieldGetMessage = {
-  id?: BigInt;
+  id?: bigint;
   content?: string;
   createAt?: Date;
-  replyTo?: BigInt;
+  replyTo?: bigint;
 };
 
 export default class MessageDbContext {
@@ -30,7 +30,7 @@ export default class MessageDbContext {
     return this._instance;
   }
 
-  getMessage(messageId: BigInt) {
+  getMessage(messageId: bigint) {
     this.producer.send({
       topic: 'get-message',
       messages: [
@@ -47,7 +47,7 @@ export default class MessageDbContext {
     });
   }
 
-  getMessagesByContainSubContent(userId: BigInt, keyword: string) {
+  getMessagesByContainSubContent(userId: bigint, keyword: string) {
     this.producer.send({
       topic: 'get-messages-by-contain-sub-content',
       messages: [
@@ -58,7 +58,7 @@ export default class MessageDbContext {
     });
   }
 
-  getMessagesByReplyTo(userId: BigInt, replyTo: BigInt) {
+  getMessagesByReplyTo(userId: bigint, replyTo: bigint) {
     this.producer.send({
       topic: 'get-messages-by-reply-to',
       messages: [
@@ -69,7 +69,7 @@ export default class MessageDbContext {
     });
   }
 
-  getMessagesByDay(userId: BigInt, day: Date) {
+  getMessagesByDay(userId: bigint, day: Date) {
     this.producer.send({
       topic: 'get-messages-by-day',
       messages: [
@@ -80,7 +80,7 @@ export default class MessageDbContext {
     });
   }
 
-  getMessagesByPeriod(userId: BigInt, start: Date, end: Date) {
+  getMessagesByPeriod(userId: bigint, start: Date, end: Date) {
     //TODO which is better (use getMessagesByDay)
     // this.producer.send({
     //   topic: 'get-messages-by-period',
@@ -90,7 +90,7 @@ export default class MessageDbContext {
     // })
   }
 
-  editMessage(messageId: BigInt, newContent: string) {
+  editMessage(messageId: bigint, newContent: string) {
     this.producer.send({
       topic: 'edit-message',
       messages: [
@@ -101,7 +101,7 @@ export default class MessageDbContext {
     });
   }
 
-  deleteMessage(messageId: BigInt) {
+  deleteMessage(messageId: bigint) {
     this.producer.send({
       topic: 'delete-message',
       messages: [
@@ -112,7 +112,7 @@ export default class MessageDbContext {
     });
   }
 
-  createMessage(userId: BigInt, message: Message) {
+  createMessage(userId: bigint, message: Message) {
     this.producer.send({
       topic: 'create-message',
       messages: [

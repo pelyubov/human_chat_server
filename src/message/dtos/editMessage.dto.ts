@@ -1,6 +1,6 @@
 export class EditMessageDto {
   content: string;
   type: string;
-  replyTo?: BigInt;
+  replyTo?: bigint;
   attachments?: string[];
 }

@@ -5,7 +5,7 @@ import { User } from 'src/user/entities/user.enity';
 
 const snowflake = new Snowflex(1, 1);
 
-type UserTest = User & { friends: BigInt[] };
+type UserTest = User & { friends: bigint[] };
 
 const dummyUserData: UserTest[] = [
   {
@@ -71,14 +71,14 @@ const dummyUserData: UserTest[] = [
 ];
 
 type MessageTest = Message & {
-  sender: BigInt;
-  receiver?: BigInt;
+  sender: bigint;
+  receiver?: bigint;
 };
 
 const dummyMessageData: MessageTest[] = [];
 
 type GroupChatTest = GroupChat & {
-  messages: BigInt[];
+  messages: bigint[];
 };
 
 const dummyGroupChatData: GroupChatTest[] = [

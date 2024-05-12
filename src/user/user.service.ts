@@ -29,7 +29,7 @@ export class UserService {
     return user;
   }
 
-  async get(id: BigInt): Promise<GetUserDto> {
+  async get(id: bigint): Promise<GetUserDto> {
     const userInfo = await this.userDbContext.getUser(id);
     if (!userInfo) {
       throw new Error('User not found');
@@ -45,7 +45,7 @@ export class UserService {
     );
     return Promise.resolve(user);
   }
-  async update(id: BigInt, userInfo: UpdateUserDto): Promise<boolean> {
+  async update(id: bigint, userInfo: UpdateUserDto): Promise<boolean> {
     const findUser = await this.userDbContext.getUser(id);
     if (!findUser) {
       throw new Error('User not found');
@@ -53,7 +53,7 @@ export class UserService {
     await this.userDbContext.updateUser(id, userInfo);
     return Promise.resolve(true);
   }
-  async delete(id: BigInt): Promise<boolean> {
+  async delete(id: bigint): Promise<boolean> {
     const findUser = await this.userDbContext.getUser(id);
     if (!findUser) {
       throw new Error('User not found');
@@ -61,7 +61,7 @@ export class UserService {
     await this.userDbContext.deleteUser(id);
     return Promise.resolve(true);
   }
-  async getFriends(id: BigInt): Promise<GetUserDto[]> {
+  async getFriends(id: bigint): Promise<GetUserDto[]> {
     const findUser = await this.userDbContext.getUser(id);
     if (!findUser) {
       throw new Error('User not found');
@@ -82,7 +82,7 @@ export class UserService {
       )
     );
   }
-  async getStrangers(id: BigInt): Promise<User[]> {
+  async getStrangers(id: bigint): Promise<User[]> {
     throw new Error('Method not implemented.');
   }
 }

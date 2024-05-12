@@ -41,7 +41,7 @@ export default class Snowflex {
     return Date.now();
   }
 
-  public nextId(): BigInt {
+  public nextId(): bigint {
     const timestamp = this.getTimestamp();
     if (this.lastTimestamp === -1) {
       this.lastTimestamp = timestamp;
@@ -57,7 +57,7 @@ export default class Snowflex {
       this.sequence = 0;
       this.lastTimestamp = timestamp - (diff % (1 << this.sequenceBits));
     }
-    return BigInt(
+    return bigint(
       ((timestamp - this.epoch) << this.dataCenterIdShift) |
         (this.dataCenterId << this.workerIdShift) |
         (this.workerId << this.sequenceBits) |

@@ -1,10 +1,10 @@
 import { User } from 'src/user/entities/user.enity';
 import { GroupChat } from '../entities/chat.entity';
 export interface IChatService {
-  create(id: BigInt, name: string, avatar: string, members: User[]): Promise<boolean>;
-  get(id: BigInt): Promise<GroupChat>;
-  update(id: BigInt, name: string, avatar: string): Promise<boolean>;
-  delete(id: BigInt): Promise<boolean>;
-  getChatList(userID: BigInt): Promise<GroupChat[]>;
-  getUserInGroup(groupID: BigInt): Promise<User[]>;
+  create(id: bigint, name: string, avatar: string, members: User[]): Promise<boolean>;
+  get(id: bigint): Promise<GroupChat>;
+  update(id: bigint, name: string, avatar: string): Promise<boolean>;
+  delete(id: bigint): Promise<boolean>;
+  getChatList(userID: bigint): Promise<GroupChat[]>;
+  getUserInGroup(groupID: bigint): Promise<User[]>;
 }

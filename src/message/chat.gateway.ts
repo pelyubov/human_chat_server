@@ -69,7 +69,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   @SubscribeMessage('messages')
   async onMessages(
-    @MessageBody() data: { sender: BigInt; receiver: BigInt; input: CreateMessageDto },
+    @MessageBody() data: { sender: bigint; receiver: bigint; input: CreateMessageDto },
   ) {
     const message = await this.messageService.create(data.sender, data.input);
     this.io
@@ -78,7 +78,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   @SubscribeMessage('editMessage')
-  async onEditMessage(@MessageBody() data: { id: BigInt; input: EditMessageDto }) {
+  async onEditMessage(@MessageBody() data: { id: bigint; input: EditMessageDto }) {
     const message = await this.messageService.edit(data.id, data.input);
     if (message) {
       this.io.to(data.id.toString()).emit('editMessage', { message: message });
@@ -86,7 +86,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   @SubscribeMessage('deleteMessage')
-  async onDeleteMessage(@MessageBody() data: { id: BigInt }) {
+  async onDeleteMessage(@MessageBody() data: { id: bigint }) {
     const message = await this.messageService.delete(data.id);
     if (message) {
       this.io.to(data.id.toString()).emit('deleteMessage', { message: message });
@@ -94,7 +94,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   @SubscribeMessage('getMessages')
-  async onGetMessages(@MessageBody() data: { sender: BigInt }) {
+  async onGetMessages(@MessageBody() data: { sender: bigint }) {
     throw new Error('Method not implemented.');
   }
 

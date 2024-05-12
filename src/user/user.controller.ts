@@ -19,7 +19,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('get/:id')
-  async getUser(@Param('id') id: BigInt): Promise<GetUserDto> {
+  async getUser(@Param('id') id: bigint): Promise<GetUserDto> {
     try {
       return await this.userService.get(id);
     } catch (error) {
@@ -38,7 +38,7 @@ export class UserController {
   }
 
   @Put('update/:id')
-  async updateUser(@Param('id') id: BigInt, @Body() user: UpdateUserDto): Promise<boolean> {
+  async updateUser(@Param('id') id: bigint, @Body() user: UpdateUserDto): Promise<boolean> {
     try {
       return this.userService.update(id, user);
     } catch (error) {
@@ -47,7 +47,7 @@ export class UserController {
   }
 
   @Delete('delete/:id')
-  async deleteUser(@Param('id') id: BigInt): Promise<boolean> {
+  async deleteUser(@Param('id') id: bigint): Promise<boolean> {
     try {
       return this.userService.delete(id);
     } catch (error) {

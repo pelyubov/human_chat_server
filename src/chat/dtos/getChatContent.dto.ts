@@ -1,7 +1,7 @@
 class GetChatContentDto {
-  members: BigInt[];
-  messages?: BigInt[];
-  constructor(members: BigInt[], messages?: BigInt[]) {
+  members: bigint[];
+  messages?: bigint[];
+  constructor(members: bigint[], messages?: bigint[]) {
     this.members = members;
     this.messages = messages;
   }

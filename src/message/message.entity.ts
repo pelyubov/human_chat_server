@@ -1,17 +1,17 @@
 export class Message {
-  id: BigInt;
+  id: bigint;
   content: string;
   type: string;
   createdAt: Date;
-  replyTo?: BigInt;
+  replyTo?: bigint;
   attachments?: string[];
   isDeleted? = false;
   constructor(
-    id: BigInt,
+    id: bigint,
     content: string,
     type: string,
     createdAt: Date,
-    replyTo?: BigInt,
+    replyTo?: bigint,
     attrachments?: string[],
     isDeleted?: boolean,
   ) {
