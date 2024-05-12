@@ -41,16 +41,3 @@ graph.vert User {
 	blocks       Edge (-> User)
 	requests     Edge (-> User)
 }
-
-https://media.discordapp.net/attachments/
-172645867570987008/
-1238862812562853971/
-c75845ec-f922-4181-bb7f-5ec4474d39e6.png
-?ex=6640d467
-&is=663f82e7
-&hm=5ccbb853c70ce82ad302cf0ac22bb20084da83eafba45331fe31dbe19302bf7e
-&=
-&format=webp
-&quality=lossless
-&width=396
-&height=670
