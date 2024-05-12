@@ -1,0 +1,56 @@
+typedef Snowflake bigint(64) struct { bit none, u41 time, u10 worker, u12 increment }
+
+table Auth {
+    user_id       Snowflake PRIMARY KEY
+    email         string
+    credentials   string                  # chuỗi mã hóa
+}
+table Users {
+    user_id       Snowflake PRIMARY KEY
+    username      string
+    display_name  string
+    bio           string
+}
+table Messages {
+    message_id    Snowflake PRIMARY KEY
+    author_id     Snowflake
+    channel_id    Snowflake
+    content       string
+    last_edit     DateTime?
+    attachments   Set<Snowflake>
+}
+table Attachments {
+	att_id        Snowflake PRIMARY KEY
+	file_name     string
+	type          string
+	url		      string
+}
+
+graph.vert Group {
+    id           Snowflake
+    name         string
+    has          Edge (-> User)
+}
+
+graph.vert User {
+    id		     Snowflake
+    belongsTo    Edge (-> Group)
+	owns 	     Edge (-> Group)
+
+    friendsWith  Edge (-> User)
+	blocks       Edge (-> User)
+	requests     Edge (-> User)
+}
+
+https://media.discordapp.net/attachments/
+172645867570987008/
+1238862812562853971/
+c75845ec-f922-4181-bb7f-5ec4474d39e6.png
+?ex=6640d467
+&is=663f82e7
+&hm=5ccbb853c70ce82ad302cf0ac22bb20084da83eafba45331fe31dbe19302bf7e
+&=
+&format=webp
+&quality=lossless
+&width=396
+&height=670
