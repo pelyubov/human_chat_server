@@ -26,18 +26,30 @@ table Attachments {
 	url		      string
 }
 
+graph.edge dual UserGroupRelation {
+    role         string
+    joinedAt     DateTime
+}
+
+enum FriendRelationStatus {
+    PENDING
+    ACCEPTED
+    BLOCKED
+}
+
+graph.edge dual FriendRelation {
+    status       enum FriendRelationStatus
+}
+
 graph.vert Group {
     id           Snowflake
     name         string
-    has          Edge (-> User)
+    has          Edge<GroupRelation> (-> User)
 }
 
 graph.vert User {
     id		     Snowflake
-    belongsTo    Edge (-> Group)
-	owns 	     Edge (-> Group)
-
-    friendsWith  Edge (-> User)
-	blocks       Edge (-> User)
-	requests     Edge (-> User)
+    belongsTo    Edge<GroupRelation> (-> Group)
+    friendsWith  Edge<FriendRelation> (-> User)
 }
+
