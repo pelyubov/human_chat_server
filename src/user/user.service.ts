@@ -25,7 +25,7 @@ export class UserService {
   }
 
   async login(email: string, password: string) {
-    const user = await this.userDbContext.getUserByEmailAndPassword(email, password);
+    const user = await this.userDbContext.login(email, password);
     return user;
   }
 
@@ -41,7 +41,7 @@ export class UserService {
       userInfo.status,
       userInfo.isDeleted,
       userInfo.username,
-      userInfo.avatar,
+      userInfo.avatar
     );
     return Promise.resolve(user);
   }
@@ -77,9 +77,9 @@ export class UserService {
             friend.status,
             friend.isDeleted,
             friend.username,
-            friend.avatar,
-          ),
-      ),
+            friend.avatar
+          )
+      )
     );
   }
   async getStrangers(id: BigInt): Promise<User[]> {
