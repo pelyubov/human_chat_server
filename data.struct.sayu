@@ -16,6 +16,7 @@ table Messages {
   message_id    Snowflake PRIMARY KEY
   author_id     Snowflake
   channel_id    Snowflake
+  reply_to      Snowflake?
   content       string
   last_edit     DateTime?
   attachments   Set<Snowflake>
