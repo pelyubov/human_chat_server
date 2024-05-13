@@ -10,7 +10,7 @@ import {
 import { Server } from 'socket.io';
 import { CreateMessageDto } from './dtos/createMessage.dto';
 import { EditMessageDto } from './dtos/editMessage.dto';
-import { IMessageService } from './message.interface.service';
+import { IMessageService } from './message.service.interface';
 import { MessageService } from './message.service';
 
 @WebSocketGateway({
