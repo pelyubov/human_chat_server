@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { User } from 'src/user/entities/user.enity';
-import { GroupChat } from './entities/chat.entity';
+import { Group } from '../entities/chat.entity';
 import { IChatService } from './interfaces/chat.interface.service';
 
 @Injectable()
@@ -8,7 +8,7 @@ export class ChatService implements IChatService {
   create(id: bigint, name: string, avatar: string, members: User[]): Promise<boolean> {
     throw new Error('Method not implemented.');
   }
-  get(id: bigint): Promise<GroupChat> {
+  get(id: bigint): Promise<Group> {
     throw new Error('Method not implemented.');
   }
   update(id: bigint, name: string, avatar: string): Promise<boolean> {
@@ -17,7 +17,7 @@ export class ChatService implements IChatService {
   delete(id: bigint): Promise<boolean> {
     throw new Error('Method not implemented.');
   }
-  getChatList(userID: bigint): Promise<GroupChat[]> {
+  getChatList(userID: bigint): Promise<Group[]> {
     throw new Error('Method not implemented.');
   }
   getUserInGroup(groupID: bigint): Promise<User[]> {

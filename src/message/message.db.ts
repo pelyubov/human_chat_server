@@ -1,6 +1,6 @@
 import { Client } from 'cassandra-driver';
 import { Consumer, Producer } from 'kafkajs';
-import { Message } from './message.entity';
+import { Message } from '../entities/message.entity';
 
 type QueriesFieldGetMessage = {
   id?: bigint;
