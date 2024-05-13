@@ -1,5 +1,6 @@
 {
   "debug.javascript.autoAttachFilter": "disabled",
   "cassandraWorkbench.activeClusterName": "human_chat",
-  "cassandraWorkbench.activeKeyspace": [["human_chat", null]]
+  "cassandraWorkbench.activeKeyspace": [["human_chat", null]],
+  "files.eol": "\n"
 }

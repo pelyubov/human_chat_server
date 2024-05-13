@@ -1,9 +1,9 @@
 import { Message } from 'kafkajs';
 import { GroupChat } from 'src/chat/entities/groupchat';
-import Snowflex from '../utils/snowflake';
+import Snowflake from '../utils/snowflake';
 import { User } from 'src/user/entities/user.enity';
 
-const snowflake = new Snowflex(1, 1);
+const snowflake = new Snowflake(1, 1);
 
 type UserTest = User & { friends: bigint[] };
 

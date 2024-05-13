@@ -1,26 +1,21 @@
+import Snowflake from '@Project.Utils/snowflake';
+import { todo } from '@Project.Utils/common';
+import { MessageId } from '@Project.Utils/types';
+
 export class Message {
-  id: bigint;
-  content: string;
-  type: string;
-  createdAt: Date;
-  replyTo?: bigint;
-  attachments?: string[];
-  isDeleted? = false;
   constructor(
-    id: bigint,
-    content: string,
-    type: string,
-    createdAt: Date,
-    replyTo?: bigint,
-    attrachments?: string[],
-    isDeleted?: boolean,
-  ) {
-    this.id = id;
+    public readonly id: MessageId,
+    public content: string,
+    public type: string,
+    public readonly replyTo?: MessageId,
+    public attachments = [],
+    public isDeleted = false
+  ) {}
+  timestamp() {
+    return new Date(Snowflake.timestamp(this.id));
+  }
+  edit(content: string) {
+    todo!('TODO: message#edit: Write to database');
     this.content = content;
-    this.type = type;
-    this.createdAt = createdAt;
-    this.replyTo = replyTo;
-    this.attachments = attrachments;
-    this.isDeleted = isDeleted;
   }
 }
