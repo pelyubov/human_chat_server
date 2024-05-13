@@ -1,9 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { Public } from './auth/decorators/public.decorator';
+import { Body, Controller, Post, SetMetadata } from '@nestjs/common';
 
 @Controller()
 export class AppController {
-  @Public()
+  @SetMetadata('skipAuth', true)
   @Post('test')
   test(@Body() data: any) {
     console.log(data);

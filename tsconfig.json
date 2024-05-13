@@ -11,10 +11,12 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "@Project.Test/*": ["test/*"],
+      "@Project.Tests/*": ["test/*"],
+      "@Project.Controllers/*": ["src/controllers/*"],
       "@Project.Database/*": ["src/db/*"],
       "@Project.Utils/*": ["src/utils/*"],
       "@Project.Entities/*": ["src/entities/*"],
+      "@Project.Services/*": ["src/services/*"],
       "@Project.Root/*": ["src/*"],
       // "*": ["node_modules/*"]
     },

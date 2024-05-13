@@ -2,8 +2,7 @@ export type Nullable<T> = T | null;
 export type Optional<T> = T | undefined;
 export type Fn = (...args: any[]) => any;
 
-export type Macro<T extends Fn> = Nullable<T>;
-
+export type EmptyFn = () => void;
 export function todo(message?: string): never {
   const error = new Error(message);
   error.name = 'NotImplementedError';
