@@ -1,28 +1,19 @@
 import { Client } from 'cassandra-driver';
 import { Consumer, Producer } from 'kafkajs';
-<<<<<<<< HEAD:src/channel/channel.db.ts
 import { Channel } from '../entities/channel.entity';
 import { GraphTraversalSource } from '@Project.Root/db/graph.db';
 
 interface IChatDbContext {
   create(id: bigint, name: string, avatar: string, members: bigint[]): Promise<any>;
   get(id: bigint): Promise<Channel>;
-========
-import { GraphTraversalSource } from '@Project.Database/graph.db';
-import { Group } from '../entities/chat.entity';
-
-interface IChatDbContext {
-  create(id: bigint, name: string, avatar: string, members: bigint[]): Promise<any>;
-  get(id: bigint): Promise<Group>;
->>>>>>>> a80e4977d1efe28308ed0f03523d8f6b8c736178:src/db/chat.db.ts
   update(id: bigint, name: string, avatar: string, members: bigint[]): Promise<any>;
   delete(id: bigint): Promise<any>;
   getChatList(userID: bigint): Promise<GetChannelInfoDto[]>;
   getUsersIdInGroup(groupID: bigint): Promise<bigint[]>;
 }
 
-export class ChatDbContext implements IChatDbContext {
-  private static _instance: ChatDbContext;
+export class ChannelDbContext implements IChatDbContext {
+  private static _instance: ChannelDbContext;
   private tableName = 'chats';
   constructor(
     private g?: GraphTraversalSource,
@@ -30,11 +21,11 @@ export class ChatDbContext implements IChatDbContext {
     private producer?: Producer,
     private consumer?: Consumer
   ) {
-    if (ChatDbContext._instance) {
-      return ChatDbContext._instance;
+    if (ChannelDbContext._instance) {
+      return ChannelDbContext._instance;
     }
 
-    ChatDbContext._instance = this;
+    ChannelDbContext._instance = this;
   }
   async create(id: bigint, name: string, avatar: string, members: bigint[]): Promise<any> {
     return await this.producer.send({
@@ -46,11 +37,7 @@ export class ChatDbContext implements IChatDbContext {
       ]
     });
   }
-<<<<<<<< HEAD:src/channel/channel.db.ts
   async get(id: bigint): Promise<Channel> {
-========
-  async get(id: bigint): Promise<Group> {
->>>>>>>> a80e4977d1efe28308ed0f03523d8f6b8c736178:src/db/chat.db.ts
     const query = 'Select * from ' + this.tableName + ` where id = ${id}`;
     const result = await this.table.execute(query);
     throw new Error('Method not implemented.');
@@ -90,7 +77,7 @@ export class ChatDbContext implements IChatDbContext {
     throw new Error('Method not implemented.');
   }
 
-  public static get instance(): ChatDbContext {
+  public static get instance(): ChannelDbContext {
     if (!this._instance) {
       throw new Error('ChatDbContext is not initialized');
     }
