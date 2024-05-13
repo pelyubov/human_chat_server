@@ -10,7 +10,7 @@ const {
   ADDRESS3: host3,
   SCYLLA_PORT: scyllaPort,
   CASSANDRA_LOCAL_DATACENTER: localDatacenter,
-  CASSANDRA_KEYSPACE: cassandraKeyspace,
+  CASSANDRA_KEYSPACE: cassandraKeyspace
 } = process.env;
 
 const contactPoints = [host1, host2, host3].map((host, i) => `${host}:${scyllaPort}`);
@@ -18,7 +18,7 @@ const contactPoints = [host1, host2, host3].map((host, i) => `${host}:${scyllaPo
 const client = new Client({
   contactPoints: contactPoints,
   localDataCenter: localDatacenter,
-  keyspace: cassandraKeyspace,
+  keyspace: cassandraKeyspace
 });
 
 export default class TableDbContext extends IDbContext {

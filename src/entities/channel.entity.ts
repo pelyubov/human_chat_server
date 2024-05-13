@@ -1,4 +1,4 @@
-export class GroupChat {
+export class Channel {
   id: bigint;
   members: bigint[];
   name?: string;

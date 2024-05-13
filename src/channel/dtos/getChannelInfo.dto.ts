@@ -1,4 +1,4 @@
-class GetChatInfoDto {
+class GetChannelInfoDto {
   id: bigint;
   name?: string;
   photo: string;

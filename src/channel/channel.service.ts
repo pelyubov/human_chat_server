@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { User } from 'src/user/entities/user.enity';
-import { GroupChat } from './entities/chat.entity';
-import { IChatService } from './interfaces/chat.interface.service';
+import { Channel } from '../entities/channel.entity';
+import { IChannelService } from './channel.interface.service';
+import { User } from '@Project.Root/entities/user.entity';
 
 @Injectable()
-export class ChatService implements IChatService {
+export class ChannelService implements IChannelService {
   create(id: bigint, name: string, avatar: string, members: User[]): Promise<boolean> {
     throw new Error('Method not implemented.');
   }
-  get(id: bigint): Promise<GroupChat> {
+  get(id: bigint): Promise<Channel> {
     throw new Error('Method not implemented.');
   }
   update(id: bigint, name: string, avatar: string): Promise<boolean> {
@@ -17,10 +17,10 @@ export class ChatService implements IChatService {
   delete(id: bigint): Promise<boolean> {
     throw new Error('Method not implemented.');
   }
-  getChatList(userID: bigint): Promise<GroupChat[]> {
+  getChannelList(userID: bigint): Promise<Channel[]> {
     throw new Error('Method not implemented.');
   }
-  getUserInGroup(groupID: bigint): Promise<User[]> {
+  getUserInChannel(channelID: bigint): Promise<User[]> {
     throw new Error('Method not implemented.');
   }
 }

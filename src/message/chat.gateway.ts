@@ -5,7 +5,7 @@ import {
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
+  WebSocketServer
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { CreateMessageDto } from './dtos/createMessage.dto';
@@ -15,8 +15,8 @@ import { MessageService } from './message.service';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
-  },
+    origin: '*'
+  }
 })
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -63,13 +63,13 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     this.io.to(calleeId).emit('IceCandidate', {
       sender: callerId,
-      iceCandidate: iceCandidate,
+      iceCandidate: iceCandidate
     });
   }
 
   @SubscribeMessage('messages')
   async onMessages(
-    @MessageBody() data: { sender: bigint; receiver: bigint; input: CreateMessageDto },
+    @MessageBody() data: { sender: bigint; receiver: bigint; input: CreateMessageDto }
   ) {
     const message = await this.messageService.create(data.sender, data.input);
     this.io

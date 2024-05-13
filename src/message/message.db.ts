@@ -1,6 +1,6 @@
 import { Client } from 'cassandra-driver';
 import { Consumer, Producer } from 'kafkajs';
-import { Message } from './message.entity';
+import { Message } from '../entities/message.entity';
 
 type QueriesFieldGetMessage = {
   id?: bigint;
@@ -14,7 +14,7 @@ export default class MessageDbContext {
   constructor(
     private table?: Client,
     private producer?: Producer,
-    private consumer?: Consumer,
+    private consumer?: Consumer
   ) {
     if (MessageDbContext._instance) {
       return MessageDbContext._instance;
@@ -35,15 +35,15 @@ export default class MessageDbContext {
       topic: 'get-message',
       messages: [
         {
-          value: JSON.stringify({ id: messageId }),
-        },
-      ],
+          value: JSON.stringify({ id: messageId })
+        }
+      ]
     });
     this.consumer.subscribe({ topic: 'get-message', fromBeginning: true });
     this.consumer.run({
       eachMessage: async ({ message }) => {
         console.log(message.value.toString());
-      },
+      }
     });
   }
 
@@ -52,9 +52,9 @@ export default class MessageDbContext {
       topic: 'get-messages-by-contain-sub-content',
       messages: [
         {
-          value: JSON.stringify({ userId: userId, keyword: keyword }),
-        },
-      ],
+          value: JSON.stringify({ userId: userId, keyword: keyword })
+        }
+      ]
     });
   }
 
@@ -63,9 +63,9 @@ export default class MessageDbContext {
       topic: 'get-messages-by-reply-to',
       messages: [
         {
-          value: JSON.stringify({ userId: userId, replyTo: replyTo }),
-        },
-      ],
+          value: JSON.stringify({ userId: userId, replyTo: replyTo })
+        }
+      ]
     });
   }
 
@@ -74,9 +74,9 @@ export default class MessageDbContext {
       topic: 'get-messages-by-day',
       messages: [
         {
-          value: JSON.stringify({ userId: userId, day: day }),
-        },
-      ],
+          value: JSON.stringify({ userId: userId, day: day })
+        }
+      ]
     });
   }
 
@@ -95,9 +95,9 @@ export default class MessageDbContext {
       topic: 'edit-message',
       messages: [
         {
-          value: JSON.stringify({ messageId: messageId, newContent: newContent }),
-        },
-      ],
+          value: JSON.stringify({ messageId: messageId, newContent: newContent })
+        }
+      ]
     });
   }
 
@@ -106,9 +106,9 @@ export default class MessageDbContext {
       topic: 'delete-message',
       messages: [
         {
-          value: JSON.stringify({ messageId: messageId }),
-        },
-      ],
+          value: JSON.stringify({ messageId: messageId })
+        }
+      ]
     });
   }
 
@@ -117,9 +117,9 @@ export default class MessageDbContext {
       topic: 'create-message',
       messages: [
         {
-          value: JSON.stringify({ userId: userId, message: message }),
-        },
-      ],
+          value: JSON.stringify({ userId: userId, message: message })
+        }
+      ]
     });
   }
 }

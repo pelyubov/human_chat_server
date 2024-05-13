@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 async function main() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors({
-    origin: '*',
+    origin: '*'
   });
   app.use((req: Request, res, next) => {
     console.log(req.headers);
