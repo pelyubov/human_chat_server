@@ -1,8 +1,8 @@
+import Snowflake from '@Project.Root/utils/snowflake';
 import * as bcrypt from 'bcrypt';
-import Snowflake from '../src/core/utils/snowflake';
 
-const snowflake = new Snowflake(1, 1);
-const userID = snowflake.nextId();
+const snowflake = new Snowflake(1);
+const userID = snowflake.next();
 
 const password = 'cơm chiên gà';
 

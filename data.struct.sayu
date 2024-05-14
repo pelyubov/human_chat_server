@@ -9,13 +9,13 @@ table Users {
   user_id       Snowflake PRIMARY KEY
   username      string
   display_name  string
-  avatar        Snowflake?
   bio           string
 }
 table Messages {
   message_id    Snowflake PRIMARY KEY
   author_id     Snowflake
   channel_id    Snowflake
+  reply_to      Snowflake?
   content       string
   last_edit     DateTime?
   attachments   Set<Snowflake>
@@ -23,18 +23,12 @@ table Messages {
 table Attachments {
 	att_id        Snowflake PRIMARY KEY
 	file_name     string
-	type          string
+	att_type      string
 	url		        string
 }
 table Channels {
   channel_id    Snowflake PRIMARY KEY
   name          string
-  avatar        Snowflake?
-}
-
-graph.edge dual UserGroupRelation {
-  role         string
-  joinedAt     DateTime
 }
 
 enum FriendRelationStatus {
@@ -44,16 +38,21 @@ enum FriendRelationStatus {
 }
 
 graph.edge dual FriendRelation {
-    status       enum FriendRelationStatus
+  status        FriendRelationStatus
+}
+
+graph.edge dual UserGroupRelation {
+  role          string
+  joinedAt      DateTime
 }
 
 graph.vert Group {
-  id           Snowflake
-  has          Edge<GroupRelation> (-> User)
+  id            Snowflake
+  edge          GroupRelation -> User
 }
 
 graph.vert User {
-  id		       Snowflake
-  belongsTo    Edge<GroupRelation> (-> Group)
-  friendsWith  Edge<FriendRelation> (-> User)
+  id		        Snowflake
+  edge          GroupRelation -> Group
+  edge          FriendRelation -> User
 }

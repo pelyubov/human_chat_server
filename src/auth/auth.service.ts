@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Mailer } from 'src/core/utils/mail/mailer';
-import { pinGenerate } from 'src/core/utils/mail/pinGenerate';
 import { CreateUserDto } from 'src/user/dtos/createUser.dto';
 import { UserService } from 'src/user/user.service';
-import { HashingPassword } from './hassingPassword';
+import { HashingPassword } from './hashingPassword';
+import { Mailer } from '@Project.Root/utils/mail/mailer';
+import { pinCodeGen } from '@Project.Root/utils/mail/pinGenerate';
 
 @Injectable()
 export class AuthService {
@@ -58,7 +58,7 @@ export class AuthService {
   }
 
   forgotPassword(email: string) {
-    this.pinCode = pinGenerate();
+    this.pinCode = pinCodeGen();
     this.mailer.send(email, 'Reset your password', `Reset password with pin code: ${this.pinCode}`);
   }
 
