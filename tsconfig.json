@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "declaration": true,
+    "declaration": false,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -13,11 +13,13 @@
     "paths": {
       "@Project.Tests/*": ["test/*"],
       "@Project.Controllers/*": ["src/controllers/*"],
+      "@Project.Configs/*": ["src/configs/*"],
       "@Project.Database/*": ["src/db/*"],
       "@Project.Utils/*": ["src/utils/*"],
       "@Project.Entities/*": ["src/entities/*"],
       "@Project.Services/*": ["src/services/*"],
-      "@Project.Root/*": ["src/*"],
+      "@Project.Src/*": ["src/*"],
+      "@Project.Root/*": ["./*"],
       // "*": ["node_modules/*"]
     },
     "incremental": true,
@@ -27,5 +29,6 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  "include": ["./**/*.ts", "./**/*.d.ts"],
 }
