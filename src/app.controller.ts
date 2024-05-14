@@ -1,4 +1,5 @@
 import { CqlDbContext } from '@Project.Database/cql.db.service';
+import { GremlinDbContext } from '@Project.Database/gremlin.db.service';
 import { ConfigService } from '@Project.Services/config.service';
 import { ConsoleLogger, Controller, Get, HttpStatus, Res, SetMetadata } from '@nestjs/common';
 import { Response } from 'express';
@@ -7,6 +8,7 @@ import { Response } from 'express';
 export class AppController {
   constructor(
     private cqlDbContext: CqlDbContext,
+    private gremlinDbContext: GremlinDbContext,
     private config: ConfigService,
     private logger: ConsoleLogger
   ) {
@@ -16,10 +18,7 @@ export class AppController {
   @Get('hello')
   hello(@Res() response: Response) {
     if (!this.config.isDev) return response.sendStatus(HttpStatus.I_AM_A_TEAPOT);
-    const outStr = Object.entries(this.jsonifyServices())
-      .map(([key, value]) => `${key}: ${JSON.stringify(value, null, 4)}`)
-      .join('\n');
-    return response.status(HttpStatus.OK).send(`Hello! <br><pre>${outStr}</pre>`);
+    return response.status(HttpStatus.OK).json(this.jsonifyServices());
   }
 
   jsonifyServices() {

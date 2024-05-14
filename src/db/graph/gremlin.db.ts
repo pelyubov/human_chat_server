@@ -1,18 +1,15 @@
 import { ConfigService } from '@Project.Services/config.service';
 import { ConsoleLogger } from '@nestjs/common';
-import { config } from 'dotenv';
+import { AssertionError } from 'assert';
 import { driver, process as gremlinProcess } from 'gremlin';
-config();
 
 export type GraphTraversalSource =
   gremlinProcess.GraphTraversalSource<gremlinProcess.GraphTraversal>;
 const traversal = gremlinProcess.AnonymousTraversalSource.traversal;
-type DriverRemoteConnectionType = driver.DriverRemoteConnection;
-const DriverRemoteConnection = driver.DriverRemoteConnection;
 
 export class GremlinConnection {
   static instance: GremlinConnection;
-  private _client: DriverRemoteConnectionType;
+  private _client: driver.DriverRemoteConnection;
   private _g: GraphTraversalSource;
 
   constructor(
@@ -29,30 +26,48 @@ export class GremlinConnection {
     return this._g;
   }
 
-  private async init() {
-    const { janusgraphAddress, janusgraphPort } = this.config.gremlinConfig;
+  async init() {
+    const { host, port, endpoint } = this.config.gremlinConfig;
 
-    this.logger.log(`Connecting to JanusGraph at ${janusgraphAddress}:${janusgraphPort}`);
+    this.logger.log('Initializing GremlinDriver', 'Gremlin.Driver');
+    this.logger.log(`host: ${host}`, 'Gremlin.Driver.Parameters');
+    this.logger.log(`port: ${port}`, 'Gremlin.Driver.Parameters');
+    this.logger.log(`endpoint: ${endpoint}`, 'Gremlin.Driver.Parameters');
+    const url = `ws://${host}:${port}${endpoint}`;
+    this.logger.log(`url: ${url}`, 'Gremlin.Driver.Parameters');
+    this.logger.log(`Connecting...`, 'Gremlin.Driver');
 
-    const client = new DriverRemoteConnection(
-      `ws://${janusgraphAddress}:${janusgraphPort}/gremlin`
-    );
+    const client = new driver.DriverRemoteConnection(url);
+
     try {
       await client.open();
       const g = traversal().withRemote(client);
-      this.test(g);
+      await this.test(g);
       this._client = client;
       this._g = g;
       GremlinConnection.instance = this;
-      return GremlinConnection.instance;
+      this.logger.log('GremlinDriver initialization completed successfully.', 'Gremlin.Driver');
     } catch (error) {
-      this.logger.error(`Failed to connect to JanusGraph: ${error}`);
+      this.logger.error('GremlinDriver initialization failed.', 'Gremlin.Driver');
+      this.logger.error(error, 'Gremlin.Driver');
     }
   }
 
   private async test(g: GraphTraversalSource) {
-    // add log
-    g.V().toList();
+    this.logger.log(
+      'Testing query (g.V() hasLabel("test") property(ok)) ASSERT (value = True)',
+      'Gremlin.Driver'
+    );
+    const {
+      properties: {
+        ok: [{ value }]
+      }
+    } = (await g.V().hasLabel('test').next()).value;
+    const resultString = `Testing ${value ? 'passed' : 'failed'}: Got \`${value}\``;
+    if (!value) {
+      throw new AssertionError({ message: resultString });
+    }
+    this.logger.log(resultString, 'Gremlin.Driver');
   }
 
   close() {

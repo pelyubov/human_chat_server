@@ -10,6 +10,7 @@ export interface CassandraConfig {
 }
 
 export interface GremlinConfig {
-  janusgraphAddress: string;
-  janusgraphPort: number;
+  host: string;
+  port: number;
+  endpoint: string;
 }

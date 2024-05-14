@@ -9,6 +9,6 @@ export class GremlinDbContext {
     private readonly logger: ConsoleLogger,
     private readonly config: ConfigService
   ) {
-    null;
+    this.logger.log('GremlinDbContext initialized', 'GremlinDbContext');
   }
 }

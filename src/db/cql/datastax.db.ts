@@ -13,13 +13,14 @@ import { Jsonable, VoidFn } from '@Project.Utils/common';
 import { CqlDbConnectionImpl } from './cql.db.iface';
 
 export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> implements Jsonable {
+  private static type = 'DataStax';
   private static instance: DataStaxConnection;
   private _client: DataStaxClient;
   private _mapper: DataStaxMapping.Mapper;
   private _initMappings: Record<string, DataStaxMapping.ModelOptions> = {};
   private assertClient() {
     if (!this._client) {
-      throw new Error('DataStax.Driver is not initialized');
+      throw new Error('DataStaxDriver is not initialized');
     }
   }
   public get client() {
@@ -67,9 +68,9 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
       await this.registerModelFolder(resolve(__dirname, 'models'));
       await this.establishMappings();
     } catch (e) {
-      this.logger.error(`An error ocurred while setting up DataStax.Driver`, 'DataStax.Driver');
+      this.logger.error(`An error ocurred while setting up DataStaxDriver`, 'DataStax.Driver');
       this.logger.error(e, 'DataStax.Driver');
-      this.logger.error('DataStax.Driver initialization failed.', 'DataStax.Driver');
+      this.logger.error('DataStaxDriver initialization failed.', 'DataStax.Driver');
     }
   }
 
@@ -155,17 +156,14 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
     const clientState = this._client.getState();
     return {
       type: 'DataStax.Driver',
-      hosts: Object.fromEntries(
-        clientState.getConnectedHosts().map((host) => {
-          const openConnections = clientState.getOpenConnections(host);
-          return [
-            `[${host.datacenter}] ${host.address}`,
-            host.isUp()
-              ? `UP, ${openConnections} open connection${openConnections > 1 ? 's' : ''}`
-              : 'DOWN'
-          ];
-        })
-      ),
+      hosts: clientState.getConnectedHosts().reduce((connections, host) => {
+        connections[host.datacenter] ??= {};
+        connections[host.datacenter][host.address] = {
+          status: host.isUp() ? 'UP' : 'DOWN',
+          openConnections: clientState.getOpenConnections(host)
+        };
+        return connections;
+      }, {}),
       mappings: this._initMappings
     };
   }

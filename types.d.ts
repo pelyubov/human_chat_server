@@ -13,10 +13,12 @@ declare global {
       /** Machine's id. Used for Snowflake ID generation. */
       MACHINE_ID: string;
 
-      /** JanusGraph address to connect to. */
-      JANUSGRAPH_ADDRESS: string;
+      /** JanusGraph host to connect to. */
+      JANUSGRAPH_HOST: string;
       /** JanusGraph port to connect to. */
       JANUSGRAPH_PORT: string;
+      /** JanusGraph endpoint to connect to. */
+      JANUSGRAPH_ENDPOINT: string;
     }
   }
 }
