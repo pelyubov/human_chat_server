@@ -15,7 +15,7 @@ export class AppController {
     this.logger.log('AppController initialized', 'AppController');
   }
   @SetMetadata('skipAuth', true)
-  @Get('hello')
+  @Get('status')
   hello(@Res() response: Response) {
     if (!this.config.isDev) return response.sendStatus(HttpStatus.I_AM_A_TEAPOT);
     return response.status(HttpStatus.OK).json(this.jsonifyServices());
@@ -24,7 +24,8 @@ export class AppController {
   jsonifyServices() {
     return {
       config: this.config.toJSON(),
-      cqlDbContext: this.cqlDbContext.toJSON()
+      cqlDbContext: this.cqlDbContext.toJSON(),
+      gremlinDbContext: this.gremlinDbContext.toJSON()
     };
   }
 }

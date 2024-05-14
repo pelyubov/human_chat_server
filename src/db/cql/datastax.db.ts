@@ -11,9 +11,9 @@ import {
 import type { ConfigService } from '@Project.Services/config.service';
 import { Jsonable, VoidFn } from '@Project.Utils/common';
 import { CqlDbConnectionImpl } from './cql.db.iface';
+import { Schema, TableName } from './models/schema';
 
 export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> implements Jsonable {
-  private static type = 'DataStax';
   private static instance: DataStaxConnection;
   private _client: DataStaxClient;
   private _mapper: DataStaxMapping.Mapper;
@@ -96,13 +96,12 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
         const fullPath = resolve(__dirname, 'models', file);
         if ((await lstat(fullPath)).isDirectory()) await this.registerModelFolder(fullPath);
         const path = resolve(__dirname, 'models', file);
-        const model = (await import(path)) as DataStaxMapping.ModelOptions;
+        const model = (await import(path).then((m) => m.default)) as DataStaxMapping.ModelOptions;
         if (Object.keys(model).length === 0) throw new Error('Empty model');
         this.logger.log(`Registering Model(${modelName})`, 'DataStax.Mappings');
         this._initMappings[modelName] = model;
       } catch (e) {
-        this.logger.error(`Failed to register Model(${modelName})`, 'DataStax.Mappings');
-        this.logger.error(e, 'DataStax.Mappings');
+        this.logger.error(`Resgiter failed for Model(${modelName}): ${e}`, 'DataStax.Mappings');
       }
     }
   }
@@ -111,7 +110,7 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
     this.assertClient();
     try {
       this.logger.log('Establishing mappings...', 'DataStax.Mappings');
-      const mapper = new DataStaxMapping.Mapper(this._client, {
+      const mapper =  new DataStaxMapping.Mapper(this._client, {
         models: this._initMappings
       });
       this._mapper = mapper;
@@ -133,7 +132,7 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
     this.assertClient();
     this.logger.log('Testing mappings...', 'DataStax.Mappings');
     this.logger.log('Testing: Model(Test) find { ok = True }', 'DataStax.Mappings');
-    const result = await this._mapper.forModel('test').get({ ok: true });
+    const result = await this.model('test').get({ ok: true });
     const resultString = `Testing ${result.ok ? 'passed' : 'failed'}: Got \`${result.ok}\``;
     if (!result.ok) throw new AssertionError({ message: resultString });
     this.logger.log(resultString, 'DataStax.Mappings');
@@ -145,6 +144,11 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
 
   public removeEventListener(event: string, listener: VoidFn) {
     this._client.removeListener(event, listener);
+  }
+
+  public model<ModelName extends TableName>(name: ModelName) {
+    this.assertClient();
+    return this._mapper.forModel<Schema<ModelName>>(name);
   }
 
   close() {

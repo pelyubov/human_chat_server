@@ -1,4 +1,5 @@
 import { ConfigService } from '@Project.Services/config.service';
+import { Jsonable } from '@Project.Utils/common';
 import { ConsoleLogger } from '@nestjs/common';
 import { AssertionError } from 'assert';
 import { driver, process as gremlinProcess } from 'gremlin';
@@ -7,7 +8,7 @@ export type GraphTraversalSource =
   gremlinProcess.GraphTraversalSource<gremlinProcess.GraphTraversal>;
 const traversal = gremlinProcess.AnonymousTraversalSource.traversal;
 
-export class GremlinConnection {
+export class GremlinConnection implements Jsonable {
   static instance: GremlinConnection;
   private _client: driver.DriverRemoteConnection;
   private _g: GraphTraversalSource;
@@ -73,5 +74,13 @@ export class GremlinConnection {
   close() {
     this._g = null;
     this._client.close();
+  }
+
+  toJSON() {
+    const { isOpen, isSessionBound } = this._client;
+    return {
+      isOpen,
+      isSessionBound
+    };
   }
 }
