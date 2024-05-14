@@ -110,7 +110,7 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
     this.assertClient();
     try {
       this.logger.log('Establishing mappings...', 'DataStax.Mappings');
-      const mapper =  new DataStaxMapping.Mapper(this._client, {
+      const mapper = new DataStaxMapping.Mapper(this._client, {
         models: this._initMappings
       });
       this._mapper = mapper;
