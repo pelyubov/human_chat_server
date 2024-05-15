@@ -1,11 +1,12 @@
 import Snowflake from '@Project.Utils/snowflake';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@Project.Services/config.service';
 
 @Injectable()
 export class SnowflakeService {
   private snowflake: Snowflake;
-  constructor() {
-    this.snowflake = new Snowflake(parseInt(process.env.WORKER_ID));
+  constructor(config: ConfigService) {
+    this.snowflake = new Snowflake(config.workerId);
   }
 
   public next() {

@@ -43,7 +43,7 @@ export class KafkaService extends EventEmitter {
     this.consumer.subscribe({ topic: 'sent-message' });
     this.consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
-        this.emit(KafkaEvents.MESSAGE, { topic, partition, message: message.value.toString() });
+        this.emit(KafkaEvents.MESSAGE, { topic, partition, message: message.value?.toString() });
       }
     });
   }

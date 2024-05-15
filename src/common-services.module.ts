@@ -1,9 +1,14 @@
 import { ConfigService } from '@Project.Services/config.service';
+import { SnowflakeService } from '@Project.Services/snowflake.service';
 import { ConsoleLogger, Global, Module } from '@nestjs/common';
 
 @Global()
 @Module({
-  providers: [ConsoleLogger, ConfigService],
-  exports: [ConsoleLogger, ConfigService]
+  providers: [ConsoleLogger, ConfigService, SnowflakeService],
+  exports: [ConsoleLogger, ConfigService, SnowflakeService]
 })
-export class CommonServicesModule {}
+export class CommonServicesModule {
+  constructor(private logger: ConsoleLogger) {
+    this.logger.log('CommonServicesModule initialized', 'CommonServicesModule');
+  }
+}

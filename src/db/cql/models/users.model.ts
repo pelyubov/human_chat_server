@@ -1,11 +1,9 @@
 import { UserId } from '@Project.Utils/types';
 import { mapping as DataStaxMapping } from 'cassandra-driver';
 
-const userModel: DataStaxMapping.ModelOptions = {
+export const mapping: DataStaxMapping.ModelOptions = {
   mappings: new DataStaxMapping.UnderscoreCqlToCamelCaseMappings()
 };
-
-export default userModel;
 
 export interface UserModel {
   userId: UserId;

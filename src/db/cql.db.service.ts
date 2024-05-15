@@ -1,4 +1,3 @@
-import { ConfigService } from '@Project.Services/config.service';
 import { ConsoleLogger, Injectable } from '@nestjs/common';
 import { DataStaxConnection } from './cql/datastax.db';
 import { Jsonable } from '@Project.Utils/common';
@@ -7,10 +6,12 @@ import { Jsonable } from '@Project.Utils/common';
 export class CqlDbContext implements Jsonable {
   constructor(
     private readonly connection: DataStaxConnection,
-    private readonly logger: ConsoleLogger,
-    private readonly config: ConfigService
+    private readonly logger: ConsoleLogger
   ) {
     this.logger.log('CqlDbContext initialized', 'CqlDbContext');
+  }
+  async restartConnection(force = false) {
+    await this.connection.reconnect(force);
   }
   toJSON() {
     return {

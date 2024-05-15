@@ -2,7 +2,7 @@ import { Nullable } from '@Project.Utils/common';
 import { ChannelId, MessageId, UserId } from '@Project.Utils/types';
 import { mapping as DataStaxMapping } from 'cassandra-driver';
 
-const messageModel: DataStaxMapping.ModelOptions = {
+export const mapping: DataStaxMapping.ModelOptions = {
   columns: {
     id: 'message_id',
     author: 'author_id',
@@ -11,8 +11,6 @@ const messageModel: DataStaxMapping.ModelOptions = {
   },
   mappings: new DataStaxMapping.UnderscoreCqlToCamelCaseMappings()
 };
-
-export default messageModel;
 
 export interface MessageModel {
   id: MessageId;

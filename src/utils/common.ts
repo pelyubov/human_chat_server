@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export type Nullable<T> = T | null;
 export type Optional<T> = T | undefined;
 export type Fn<A extends any[] = [], R = void> = (...args: A) => R;
@@ -13,3 +15,5 @@ export type EmptyFn = () => void;
 export interface Jsonable {
   toJSON(): any;
 }
+
+export const zodAny = z.any();

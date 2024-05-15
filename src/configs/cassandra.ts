@@ -1,9 +1,9 @@
+import { getenv } from '@Project.Utils/helpers';
 import { CassandraConfig } from '@Project.Utils/types';
-import { env } from 'process';
 
 export default (): CassandraConfig => ({
-  contactPoints: env.CASSANDRA_HOSTS.split(','),
-  localDataCenter: env.CASSANDRA_DATACENTER,
-  keyspace: env.CASSANDRA_KEYSPACE,
-  port: parseInt(env.CASSANDRA_PORT, 10)
+  contactPoints: getenv('CASSANDRA_HOSTS').split(','),
+  localDataCenter: getenv('CASSANDRA_DATACENTER'),
+  keyspace: getenv('CASSANDRA_KEYSPACE'),
+  port: parseInt(getenv('CASSANDRA_PORT', '9042'), 10)
 });

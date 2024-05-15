@@ -1,5 +1,5 @@
-import { todo } from '@Project.Utils/macros';
-import { ConsoleLogger, Controller, Post } from '@nestjs/common';
+import { todo } from '@Project.Utils/helpers';
+import { Body, ConsoleLogger, Controller, Post } from '@nestjs/common';
 
 @Controller('auth')
 export class AuthController {
@@ -8,7 +8,7 @@ export class AuthController {
   }
 
   @Post('login')
-  public login() {
+  public login(@Body() body: LoginDto) {
     todo!('AuthController.login');
   }
 }
