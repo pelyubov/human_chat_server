@@ -1,6 +1,5 @@
 /* eslint-disable prettier/prettier */
 import { ConsoleLogger, Injectable } from '@nestjs/common';
-import { env } from 'process';
 import cassandraConfig from '@Project.Configs/cassandra';
 import gremlinConfig from '@Project.Configs/gremlin';
 import { Jsonable } from '@Project.Utils/common';

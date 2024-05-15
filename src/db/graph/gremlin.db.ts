@@ -1,5 +1,5 @@
 import { ConfigService } from '@Project.Services/config.service';
-import { Jsonable } from '@Project.Utils/common';
+import { Jsonable } from '@Project.Utils/types';
 import { ConsoleLogger } from '@nestjs/common';
 import { AssertionError } from 'assert';
 import { driver, process as gremlinProcess } from 'gremlin';

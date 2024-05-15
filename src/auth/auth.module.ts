@@ -4,10 +4,11 @@ import { ConfigService } from '@Project.Services/config.service';
 import { AuthController } from './auth.controller';
 import { CommonServicesModule } from '@Project.Src/common-services.module';
 import { DbModule } from '@Project.Database/db.module';
+import { AuthDbService } from './auth-db.service';
 
 @Module({
   imports: [CommonServicesModule, DbModule],
-  providers: [],
+  providers: [AuthDbService],
   controllers: [AuthController]
 })
 export class AuthModule {

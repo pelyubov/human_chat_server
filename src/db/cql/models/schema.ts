@@ -13,5 +13,5 @@ type AllSchemas = {
 export type TableName = keyof AllSchemas;
 
 export type Schema<TableName> = {
-  [T in keyof AllSchemas]: TableName extends T ? AllSchemas[T] : never;
+  [T in keyof AllSchemas]: TableName extends T ? AllSchemas[T] : Record<string, never>;
 }[keyof AllSchemas];

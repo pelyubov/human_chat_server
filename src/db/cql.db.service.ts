@@ -1,6 +1,7 @@
 import { ConsoleLogger, Injectable } from '@nestjs/common';
 import { DataStaxConnection } from './cql/datastax.db';
-import { Jsonable } from '@Project.Utils/common';
+import { Jsonable } from '@Project.Utils/types';
+import { TableName } from './cql/models/schema';
 
 @Injectable()
 export class CqlDbContext implements Jsonable {
@@ -12,6 +13,9 @@ export class CqlDbContext implements Jsonable {
   }
   async restartConnection(force = false) {
     await this.connection.reconnect(force);
+  }
+  model<T extends TableName>(name: T) {
+    return this.connection.model(name);
   }
   toJSON() {
     return {

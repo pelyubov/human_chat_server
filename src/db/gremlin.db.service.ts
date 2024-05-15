@@ -1,6 +1,6 @@
 import { ConsoleLogger, Injectable } from '@nestjs/common';
 import { GremlinConnection } from './graph/gremlin.db';
-import { Jsonable } from '@Project.Utils/common';
+import { Jsonable } from '@Project.Utils/types';
 
 @Injectable()
 export class GremlinDbContext implements Jsonable {

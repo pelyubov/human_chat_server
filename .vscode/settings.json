@@ -8,10 +8,10 @@
     ],
     [
       "ZeroTier",
-      "janusgraph"
+      "human_chat"
     ]
   ],
   "files.eol": "\n",
-  "cassandraWorkbench.splitPosition": 48.25315216983804,
+  "cassandraWorkbench.splitPosition": 64.41882421004495,
   "liveshare.languages.allowGuestCommandControl": true
 }

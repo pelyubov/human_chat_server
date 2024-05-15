@@ -7,12 +7,14 @@ import {
   types as DriverTypes,
   mapping as DataStaxMapping
 } from 'cassandra-driver';
+import { z } from 'zod';
 
 import type { ConfigService } from '@Project.Services/config.service';
-import { Jsonable, VoidFn, zodAny } from '@Project.Utils/common';
+import { Jsonable, VoidFn } from '@Project.Utils/types';
+import { zodAny } from '@Project.Utils/common';
 import { CqlDbConnectionImpl } from './cql.db.iface';
 import { Schema, TableName } from './models/schema';
-import { z } from 'zod';
+import { TableModel } from './datastax.db.helpers';
 
 export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> implements Jsonable {
   private static instance: DataStaxConnection;
@@ -160,7 +162,7 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
         models: Object.fromEntries(this._mappingDefs.entries())
       });
       this._mapper = mapper;
-      const count = Object.entries(this._mappingDefs).length;
+      const count = this._mappingDefs.size;
       this.logger.log(
         count
           ? `Mappings established for ${count} mapping${count > 1 ? 's' : ''}.`
@@ -177,12 +179,20 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
   private async testMappings() {
     this.assertClient();
     this.logger.log('Testing mappings...', 'DataStax.Mappings');
-    this.logger.log('Testing: Model(Test) find { ok = True }', 'DataStax.Mappings');
-    const result = await this.model('test').mapper.get({ ok: true });
-    const resultString = `Testing ${result?.ok ? 'passed' : 'failed'}: Got \`${result?.ok}\``;
-    if (!result?.ok) throw new AssertionError({ message: resultString });
-
+    this.logger.log('Testing query: Model(Test) find { ok = True }', 'DataStax.Mappings');
+    const model = this.model('test').mapper;
+    const readResult = await model.get({ ok: true });
+    const resultString = `Reading ${readResult?.ok ? 'passed' : 'failed'}: Got \`${readResult?.ok}\``;
+    if (!readResult?.ok) throw new AssertionError({ message: resultString });
     this.logger.log(resultString, 'DataStax.Mappings');
+    const now = Date.now();
+    this.logger.log(
+      `Testing write: Model(Test) find { ok = True } insert { lastWrite = ${now} }`,
+      'DataStax.Mappings'
+    );
+    await model.update({ ok: true, lastWrite: now }, { fields: ['ok', 'lastWrite'] });
+    this.logger.log('Write test passed.', 'DataStax.Mappings');
+    this.logger.log('Mapping tests passed.', 'DataStax.Mappings');
   }
 
   public addEventListener(event: string, listener: VoidFn) {
@@ -193,12 +203,12 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
     this.client.removeListener(event, listener);
   }
 
-  public model<ModelName extends TableName>(name: ModelName) {
+  public model<ModelName extends TableName>(name: ModelName): TableModel<Schema<ModelName>> {
     this.assertClient();
-    return {
-      mapper: this.mapper.forModel<Schema<ModelName>>(name),
-      validator: (this._validators.get(name) ?? zodAny) as z.ZodType<Schema<ModelName>>
-    };
+    return new TableModel<Schema<ModelName>>(
+      this.mapper.forModel<Schema<ModelName>>(name),
+      this._validators.get(name) ?? zodAny
+    );
   }
 
   toJSON() {
