@@ -12,7 +12,7 @@ async function main() {
   });
   app.use((req: Request, res, next) => {
     console.log(req.headers);
-    console.log(req.body);
+    console.log(req);
     next();
   });
   await app.listen(3000);

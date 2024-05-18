@@ -1,4 +1,4 @@
-import { EmptyFn } from '@Project.Utils/common';
+import { EmptyFn } from '@Project.Utils/types';
 import { Injectable } from '@nestjs/common';
 import EventEmitter from 'events';
 import {

@@ -1,3 +1,6 @@
+/**
+ * Throws an error indicating that a function is not implemented.
+ */
 export function todo(message?: string): never {
   const error = new Error(`TODO: ${message}`);
   error.name = 'NotImplementedError';
@@ -9,7 +12,7 @@ export function todo(message?: string): never {
 }
 
 /**
- * Grab an environment variable.<br>
+ * Grab an environment variable.
  * If the variable is not set, an error is thrown unless a default value is provided.
  */
 export function getenv(name: string, defaultValue = ''): string {

@@ -24,7 +24,8 @@ export class GremlinConnection implements Jsonable {
     if (GremlinConnection.instance) {
       return GremlinConnection.instance;
     }
-    this.init().catch();
+    this.init();
+    GremlinConnection.instance = this;
   }
 
   get client() {
@@ -38,33 +39,31 @@ export class GremlinConnection implements Jsonable {
   }
 
   async init() {
+    await this.connect();
+  }
+
+  async connect() {
+    const { host, port, endpoint } = this.config.gremlinConfig;
     try {
-      await this.connect();
-      GremlinConnection.instance = this;
+      this.logger.log('Initializing GremlinDriver', 'Gremlin.Driver');
+      this.logger.log(`host: ${host}`, 'Gremlin.Driver.Parameters');
+      this.logger.log(`port: ${port}`, 'Gremlin.Driver.Parameters');
+      this.logger.log(`endpoint: ${endpoint}`, 'Gremlin.Driver.Parameters');
+      const url = `ws://${host}:${port}${endpoint}`;
+      this.logger.log(`url: ${url}`, 'Gremlin.Driver.Parameters');
+
+      const client = new driver.DriverRemoteConnection(url);
+      this.logger.log(`Connecting...`, 'Gremlin.Driver');
+      await client.open();
+      const g = traversal().withRemote(client);
+      await this.test(g);
+      this._client = client;
+      this._g = g;
       this.logger.log('GremlinDriver initialization completed successfully.', 'Gremlin.Driver');
     } catch (e) {
       this.logger.error('GremlinDriver initialization failed.', 'Gremlin.Driver');
       this.logger.error(e, 'Gremlin.Driver');
     }
-  }
-
-  async connect() {
-    const { host, port, endpoint } = this.config.gremlinConfig;
-
-    this.logger.log('Initializing GremlinDriver', 'Gremlin.Driver');
-    this.logger.log(`host: ${host}`, 'Gremlin.Driver.Parameters');
-    this.logger.log(`port: ${port}`, 'Gremlin.Driver.Parameters');
-    this.logger.log(`endpoint: ${endpoint}`, 'Gremlin.Driver.Parameters');
-    const url = `ws://${host}:${port}${endpoint}`;
-    this.logger.log(`url: ${url}`, 'Gremlin.Driver.Parameters');
-
-    const client = new driver.DriverRemoteConnection(url);
-    this.logger.log(`Connecting...`, 'Gremlin.Driver');
-    await client.open();
-    const g = traversal().withRemote(client);
-    await this.test(g);
-    this._client = client;
-    this._g = g;
   }
 
   async close() {
@@ -104,7 +103,7 @@ export class GremlinConnection implements Jsonable {
 
     const { isOpen, isSessionBound } = this._client;
     return {
-      type: 'GremlinDriver',
+      type: 'Gremlin.Driver',
       isOpen,
       isSessionBound
     };

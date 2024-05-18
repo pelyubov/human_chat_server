@@ -7,13 +7,11 @@ import {
   types as DriverTypes,
   mapping as DataStaxMapping
 } from 'cassandra-driver';
-import { z } from 'zod';
 
 import type { ConfigService } from '@Project.Services/config.service';
 import { Jsonable, VoidFn } from '@Project.Utils/types';
-import { zodAny } from '@Project.Utils/common';
-import { CqlDbConnectionImpl } from './cql.db.iface';
-import { Schema, TableName } from './models/schema';
+import { CqlDbConnectionImpl } from '../cql.db.iface';
+import { Schema, TableName } from '../schemas/schema';
 import { TableModel } from './datastax.db.helpers';
 
 export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> implements Jsonable {
@@ -21,7 +19,6 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
   private _client?: DataStaxClient;
   private _mapper?: DataStaxMapping.Mapper;
   private _mappingDefs = new Map<string, DataStaxMapping.ModelOptions>();
-  private _validators = new Map<string, z.ZodType>();
   private assertClient() {
     if (!this._client) {
       throw new Error('DataStaxDriver is not initialized');
@@ -44,20 +41,18 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
       return DataStaxConnection.instance;
     }
     this.init();
+    DataStaxConnection.instance = this;
   }
 
   async init() {
     try {
       await this.connect();
-      DataStaxConnection.instance = this;
       this.logger.log('DataStaxDriver initialization completed successfully.', 'DataStax.Driver');
-      await this.registerModelFolder(resolve(__dirname, 'models'));
-      await this.establishMappings();
+      await this.loadMappings();
     } catch (e) {
       this.logger.error(`An error ocurred while setting up DataStaxDriver`, 'DataStax.Driver');
       this.logger.error(e, 'DataStax.Driver');
       this.logger.error('DataStaxDriver initialization failed.', 'DataStax.Driver');
-      throw e;
     }
   }
 
@@ -92,8 +87,20 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
     if (!force && this.client.getState().getConnectedHosts().length > 0) {
       return;
     }
-    await this.close();
-    await this.connect();
+    try {
+      this.logger.log('Reconnecting DataStaxDriver', 'DataStax.Driver');
+      await this.client.shutdown();
+      this.logger.log('Shutdown completed. Reconnecting...', 'DataStax.Driver');
+      await this.connect();
+      await this.test(this._client!);
+      this.logger.log('Reconnection completed successfully.', 'DataStax.Driver');
+    } catch (e) {
+      this.logger.error('Reconnection failed.', 'DataStax.Driver');
+      this.logger.error(e, 'DataStax.Driver');
+    }
+  }
+
+  async loadMappings() {
     await this.registerModelFolder(resolve(__dirname, 'models'));
     await this.establishMappings();
   }
@@ -120,6 +127,7 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
     const resultString = `Testing ${silly ? 'passed' : 'failed'}: Got \`${silly}\``;
     if (!silly) throw new AssertionError({ message: resultString });
     this.logger.log(resultString, 'DataStax.Driver');
+    this.logger.log('Read test completed successfully.', 'DataStax.Driver');
   }
 
   public async registerModelFolder(path: string) {
@@ -138,16 +146,12 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
           await this.registerModelFolder(fullPath);
         }
         const path = resolve(__dirname, 'models', file);
-        const { mapping, validator } = (await import(path)) as {
+        const { mapping } = (await import(path)) as {
           mapping: DataStaxMapping.ModelOptions;
-          validator: z.ZodType;
         };
         if (!Object.keys(mapping).length) throw new Error('Empty model');
         this.logger.log(`Registering Model(${modelName})`, 'DataStax.Mappings');
         this._mappingDefs.set(modelName, mapping);
-        if (!validator)
-          this.logger.warn(`No validator found for Model(${modelName})`, 'DataStax.Mappings');
-        else this._validators.set(modelName, validator);
       } catch (e) {
         this.logger.error(`Resgiter failed for Model(${modelName}): ${e}`, 'DataStax.Mappings');
       }
@@ -180,7 +184,7 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
     this.assertClient();
     this.logger.log('Testing mappings...', 'DataStax.Mappings');
     this.logger.log('Testing query: Model(Test) find { ok = True }', 'DataStax.Mappings');
-    const model = this.model('test').mapper;
+    const model = this.model('Test').mapper;
     const readResult = await model.get({ ok: true });
     const resultString = `Reading ${readResult?.ok ? 'passed' : 'failed'}: Got \`${readResult?.ok}\``;
     if (!readResult?.ok) throw new AssertionError({ message: resultString });
@@ -190,7 +194,7 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
       `Testing write: Model(Test) find { ok = True } insert { lastWrite = ${now} }`,
       'DataStax.Mappings'
     );
-    await model.update({ ok: true, lastWrite: now }, { fields: ['ok', 'lastWrite'] });
+    await model.update({ ok: true, last_write: now });
     this.logger.log('Write test passed.', 'DataStax.Mappings');
     this.logger.log('Mapping tests passed.', 'DataStax.Mappings');
   }
@@ -206,8 +210,7 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
   public model<ModelName extends TableName>(name: ModelName): TableModel<Schema<ModelName>> {
     this.assertClient();
     return new TableModel<Schema<ModelName>>(
-      this.mapper.forModel<Schema<ModelName>>(name),
-      this._validators.get(name) ?? zodAny
+      this.mapper.forModel<Schema<ModelName>>(name.toLowerCase())
     );
   }
 

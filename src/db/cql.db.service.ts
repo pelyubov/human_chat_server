@@ -1,12 +1,15 @@
 import { ConsoleLogger, Injectable } from '@nestjs/common';
-import { DataStaxConnection } from './cql/datastax.db';
 import { Jsonable } from '@Project.Utils/types';
-import { TableName } from './cql/models/schema';
+import { TableName } from './cql/schemas/schema';
+import { CqlDbConnectionImpl } from './cql/cql.db.iface';
+import { DataStaxConnection } from './cql/datastax/datastax.db';
+import { ExpressCassandraConnection } from './cql/express-cassandra/express-cassandra.db';
 
 @Injectable()
 export class CqlDbContext implements Jsonable {
   constructor(
-    private readonly connection: DataStaxConnection,
+    // public readonly connection: DataStaxConnection,
+    public readonly connection: ExpressCassandraConnection,
     private readonly logger: ConsoleLogger
   ) {
     this.logger.log('CqlDbContext initialized', 'CqlDbContext');
@@ -17,9 +20,9 @@ export class CqlDbContext implements Jsonable {
   model<T extends TableName>(name: T) {
     return this.connection.model(name);
   }
-  toJSON() {
+  async toJSON() {
     return {
-      connection: this.connection.toJSON()
+      connection: await this.connection.toJSON()
     };
   }
 }

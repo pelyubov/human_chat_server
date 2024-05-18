@@ -2,7 +2,7 @@ typedef Snowflake bigint(64) struct { bit none, u41 time, u10 worker, u12 increm
 
 table Auth {
   user_id       Snowflake PRIMARY KEY
-  email         string
+  email         string    CLUSTER KEY
   credentials   string                  # chuỗi mã hóa
 }
 table Users {

@@ -16,9 +16,9 @@ export class DevController {
   }
   @SetMetadata('skipAuth', true)
   @Get('/dev/status')
-  hello(@Res() response: Response) {
+  async hello(@Res() response: Response) {
     if (!this.config.isDev) return response.sendStatus(HttpStatus.NOT_FOUND);
-    return response.status(HttpStatus.OK).json(this.jsonifyServices());
+    return response.status(HttpStatus.OK).json(await this.jsonifyServices());
   }
 
   @SetMetadata('skipAuth', true)
@@ -47,10 +47,10 @@ export class DevController {
     });
   }
 
-  jsonifyServices() {
+  async jsonifyServices() {
     return {
       config: this.config.toJSON(),
-      cqlDbContext: this.cqlDbContext.toJSON(),
+      cqlDbContext: await this.cqlDbContext.toJSON(),
       gremlinDbContext: this.gremlinDbContext.toJSON()
     };
   }

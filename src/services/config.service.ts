@@ -1,16 +1,16 @@
-/* eslint-disable prettier/prettier */
+// /* eslint-disable prettier/prettier */
 import { ConsoleLogger, Injectable } from '@nestjs/common';
 import cassandraConfig from '@Project.Configs/cassandra';
 import gremlinConfig from '@Project.Configs/gremlin';
-import { Jsonable } from '@Project.Utils/common';
 import { getenv } from '@Project.Utils/helpers';
+import { Jsonable } from '@Project.Utils/types';
 
 @Injectable()
 export class ConfigService implements Jsonable {
   private _nodeEnv = getenv('NODE_ENV', 'production');
   private _cassandraConfig = cassandraConfig();
   private _gremlinConfig = gremlinConfig();
-  private _workerId = parseInt(getenv('WORKER_ID'))
+  private _workerId = parseInt(getenv('WORKER_ID'));
 
   public get nodeEnv() {
     return this._nodeEnv;
@@ -47,7 +47,7 @@ export class ConfigService implements Jsonable {
       workerId: this._workerId,
       cassandraConfig: this._cassandraConfig,
       gremlinConfig: this._gremlinConfig
-    }
+    };
   }
 
   toJSON() {

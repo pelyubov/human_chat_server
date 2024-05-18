@@ -8,15 +8,18 @@ export type InstanceFields<T> = {
   [K in keyof T]: T[K] extends AnyFn ? never : K;
 };
 
+export type OptionalProps<T> = {
+  [K in keyof T]?: T[K];
+};
+export type RequiredProps<T> = {
+  [K in keyof T]-?: T[K];
+};
+
 export type EmptyFn = () => void;
 
 export interface Jsonable {
   toJSON(): any;
 }
-
-export type FilterKeys<T, K> = {
-  [P in keyof T]: P extends K ? P : never;
-}[keyof T];
 
 export type MessageId = bigint;
 export type UserId = bigint;
