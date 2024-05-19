@@ -15,6 +15,8 @@ export type RequiredProps<T> = {
   [K in keyof T]-?: T[K];
 };
 
+export type StringKeys<T> = Extract<keyof T, string>;
+
 export type EmptyFn = () => void;
 
 export interface Jsonable {

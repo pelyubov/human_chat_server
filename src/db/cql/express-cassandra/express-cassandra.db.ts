@@ -9,8 +9,7 @@ import { AssertionError } from 'assert';
 import { ConfigService } from '@Project.Services/config.service';
 import { CqlDbConnectionImpl } from '../cql.db.iface';
 import { Schema, TableName } from '../schemas/schema';
-import { ModelInstance } from './express-cassandra.helpers';
-import { Client as DataStaxClient } from 'cassandra-driver';
+import { ModelInstance } from './helpers';
 
 export class ExpressCassandraConnection
   extends CqlDbConnectionImpl<ExpressCassandra>
@@ -99,9 +98,7 @@ export class ExpressCassandraConnection
   }
 
   async toJSON() {
-    const client = (await this.model('Test').get_cql_clientAsync()) as DataStaxClient & {
-      connected: boolean;
-    };
+    const client = await this.model('Test').get_cql_clientAsync();
     const clientState = client.getState();
     return {
       type: 'ExpressCassandra',

@@ -1,15 +1,13 @@
+import { Client as DataStaxClient } from 'cassandra-driver';
 import { ConsoleLogger, Injectable } from '@nestjs/common';
 import { Jsonable } from '@Project.Utils/types';
 import { TableName } from './cql/schemas/schema';
 import { CqlDbConnectionImpl } from './cql/cql.db.iface';
-import { DataStaxConnection } from './cql/datastax/datastax.db';
-import { ExpressCassandraConnection } from './cql/express-cassandra/express-cassandra.db';
 
 @Injectable()
 export class CqlDbContext implements Jsonable {
   constructor(
-    // public readonly connection: DataStaxConnection,
-    public readonly connection: ExpressCassandraConnection,
+    public readonly connection: CqlDbConnectionImpl<DataStaxClient>,
     private readonly logger: ConsoleLogger
   ) {
     this.logger.log('CqlDbContext initialized', 'CqlDbContext');

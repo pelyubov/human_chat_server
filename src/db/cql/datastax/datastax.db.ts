@@ -12,7 +12,7 @@ import type { ConfigService } from '@Project.Services/config.service';
 import { Jsonable, VoidFn } from '@Project.Utils/types';
 import { CqlDbConnectionImpl } from '../cql.db.iface';
 import { Schema, TableName } from '../schemas/schema';
-import { TableModel } from './datastax.db.helpers';
+import { TableModel } from './helpers';
 
 export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> implements Jsonable {
   private static instance: DataStaxConnection;
@@ -207,19 +207,24 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
     this.client.removeListener(event, listener);
   }
 
-  public model<ModelName extends TableName>(name: ModelName): TableModel<Schema<ModelName>> {
+  public model<ModelName extends TableName>(name: ModelName) {
     this.assertClient();
     return new TableModel<Schema<ModelName>>(
       this.mapper.forModel<Schema<ModelName>>(name.toLowerCase())
     );
   }
 
-  toJSON() {
-    if (!this._client) return 'DataStaxDriver is not initialized';
+  async toJSON() {
+    if (!this._client)
+      return {
+        type: 'DataStax.Driver',
+        status: 'DOWN (Client is not initialized)'
+      };
 
     const clientState = this._client.getState();
     return {
       type: 'DataStax.Driver',
+      status: 'UP',
       hosts: clientState.getConnectedHosts().reduce((connections, host) => {
         connections[host.datacenter] ??= {};
         connections[host.datacenter][host.address] = {

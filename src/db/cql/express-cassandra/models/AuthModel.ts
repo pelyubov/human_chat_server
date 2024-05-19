@@ -1,4 +1,4 @@
-import { SchemaDefinition } from '../express-cassandra.helpers';
+import { SchemaDefinition } from '../schema';
 import { AuthModel } from '@Project.Database/cql/schemas/auth.schema';
 import { types as DataStaxTypes } from 'cassandra-driver';
 

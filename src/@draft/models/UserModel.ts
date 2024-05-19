@@ -1,4 +1,4 @@
-import { SchemaDefinition } from '../../db/cql/express-cassandra/express-cassandra.helpers';
+import { SchemaDefinition } from '@Project.Database/cql/express-cassandra/schema';
 import { UserModel } from '@Project.Database/cql/schemas/user.schema';
 
 const model: SchemaDefinition<UserModel> = {

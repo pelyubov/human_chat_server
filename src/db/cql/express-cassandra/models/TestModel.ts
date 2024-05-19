@@ -1,5 +1,5 @@
 import { TestModel } from '@Project.Database/cql/schemas/test.schema';
-import { SchemaDefinition } from '../express-cassandra.helpers';
+import { SchemaDefinition } from '../schema';
 
 const model: SchemaDefinition<TestModel> = {
   table_name: 'test',
