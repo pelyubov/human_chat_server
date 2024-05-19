@@ -14,6 +14,8 @@
       "@Project.Tests/*": ["test/*"],
       "@Project.Controllers/*": ["src/controllers/*"],
       "@Project.Configs/*": ["src/configs/*"],
+      "@Project.Middlewares/*": ["src/middlewares/*"],
+      "@Project.Dtos/*": ["src/dtos/*"],
       "@Project.Database/*": ["src/db/*"],
       "@Project.Utils/*": ["src/utils/*"],
       "@Project.Entities/*": ["src/entities/*"],

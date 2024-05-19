@@ -1,7 +1,7 @@
 import { SchemaDefinition } from '@Project.Database/cql/express-cassandra/schema';
-import { UserModel } from '@Project.Database/cql/schemas/user.schema';
+import { UserModel } from '@Project.Database/cql/schemas/users.schema';
 
-const model: SchemaDefinition<UserModel> = {
+const model /*: SchemaDefinition<UserModel> */ = {
   table_name: 'users',
   fields: {
     user_id: 'bigint',

@@ -7,10 +7,10 @@ import { Response } from 'express';
 @Controller()
 export class DevController {
   constructor(
-    private cqlDbContext: CqlDbContext,
-    private gremlinDbContext: GremlinDbContext,
-    private config: ConfigService,
-    private logger: ConsoleLogger
+    private readonly cqlDbContext: CqlDbContext,
+    private readonly gremlinDbContext: GremlinDbContext,
+    private readonly config: ConfigService,
+    private readonly logger: ConsoleLogger
   ) {
     this.logger.log('DevController initialized', 'DevController');
   }

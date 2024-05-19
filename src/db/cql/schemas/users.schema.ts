@@ -1,6 +1,6 @@
 import { Nullable, UserId } from '@Project.Utils/types';
 
-export interface UsersModel {
+export interface UserModel {
   user_id: UserId;
   email: string;
   credentials: string;

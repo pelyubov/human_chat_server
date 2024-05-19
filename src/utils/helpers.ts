@@ -1,3 +1,5 @@
+import { ZodError } from 'zod';
+
 /**
  * Throws an error indicating that a function is not implemented.
  */
@@ -27,4 +29,8 @@ export function getenv(name: string, defaultValue = ''): string {
     throw new Error(`Missing environment variable: ${name}`);
   }
   return value;
+}
+
+export function formatError(e: ZodError) {
+  return Object.fromEntries(e.errors.map((v) => [v.path.join('.'), v.message]));
 }

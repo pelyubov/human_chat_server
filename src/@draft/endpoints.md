@@ -36,7 +36,7 @@ User: '/user' {
 
 Channel: '/channel' {
 	...
-	update: WS (ownerId, channelId, @Body UpdateChannelParams params) // include add members, remove members
+	update: WS (ownerId, channelId, @Body UpdateChannelParams params) // include add members, remove members, delete
 }
 
 Message: '/message' {

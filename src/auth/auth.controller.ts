@@ -1,30 +1,26 @@
 import { compare } from 'bcrypt';
+import { ZodError } from 'zod';
+import { Response } from 'express';
 import {
   Body,
   ConsoleLogger,
   Controller,
   Post,
   Res,
-  HttpStatus,
   HttpCode,
   NotFoundException,
   UnauthorizedException,
   BadRequestException
 } from '@nestjs/common';
-import { LoginDto, ILoginDto } from './dtos/login.dto';
-import { ZodError } from 'zod';
-import { Response } from 'express';
-import { AuthDbService } from './auth-db.service';
-
-function formatError(e: ZodError) {
-  return Object.fromEntries(e.errors.map((v) => [v.path.join('.'), v.message]));
-}
+import { LoginDto, ILoginDto } from '@Project.Dtos/login.dto';
+import { UserDbService } from '@Project.Src/managers/user-db.service';
+import { formatError } from '@Project.Utils/helpers';
 
 @Controller('api/auth')
 export class AuthController {
   constructor(
-    private logger: ConsoleLogger,
-    private authDb: AuthDbService
+    private readonly logger: ConsoleLogger,
+    private readonly authDb: UserDbService
   ) {
     this.logger.log('AuthController initialized', 'AuthController');
   }
@@ -47,22 +43,6 @@ export class AuthController {
     } catch (e) {
       if (!(e instanceof ZodError)) throw e;
       throw new BadRequestException({ error: formatError(e) });
-    }
-  }
-
-  @Post('signup')
-  public async signUp(@Body() body: ILoginDto, @Res() response: Response) {
-    try {
-      const result = await LoginDto.parseAsync(body);
-      const user = await this.authDb.retrieveUser(result.email);
-      if (user) {
-        return response.status(400).json({ error: 'User already exists' });
-      }
-      await this.authDb.createUser(result.email, result.password);
-      return response.status(200).json({ message: 'Success' });
-    } catch (e) {
-      if (!(e instanceof ZodError)) throw e;
-      return response.status(HttpStatus.BAD_REQUEST).json({ error: formatError(e) });
     }
   }
 }

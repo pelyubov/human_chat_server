@@ -1,8 +1,8 @@
-import { UsersModel } from '@Project.Database/cql/schemas/users.schema';
+import { UserModel } from '@Project.Database/cql/schemas/users.schema';
 import { SchemaDefinition, Long } from '../schema';
 
-const model: SchemaDefinition<UsersModel> = {
-  table_name: 'users',
+const model: SchemaDefinition<UserModel> = {
+  table_name: 'hc_users',
   fields: {
     user_id: 'bigint',
     email: 'text',
