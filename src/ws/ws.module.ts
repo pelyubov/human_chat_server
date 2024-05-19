@@ -1,9 +1,10 @@
 import { CommonServicesModule } from '@Project.Services/services.module';
 import { ConsoleLogger, Module } from '@nestjs/common';
 import { WsGateway } from './ws.gateway';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [CommonServicesModule],
+  imports: [CommonServicesModule, AuthModule],
   providers: [WsGateway],
   exports: [WsGateway]
 })

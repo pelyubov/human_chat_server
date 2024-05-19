@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { ConfigService } from '../services/config.service';
 import { hash } from 'bcrypt';
 import { scrambleStrings } from '@Project.Utils/helpers';
+import { AuthGuard } from './auth.guard';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -21,8 +22,9 @@ import { scrambleStrings } from '@Project.Utils/helpers';
       inject: [ConfigService]
     })
   ],
-  providers: [AuthService],
-  controllers: [AuthController]
+  providers: [AuthService, AuthGuard],
+  controllers: [AuthController],
+  exports: [AuthService, AuthGuard]
 })
 export class AuthModule {
   constructor(private logger: ConsoleLogger) {

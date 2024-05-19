@@ -30,4 +30,10 @@ export class AuthController {
       throw new BadRequestException({ error: formatError(e) });
     }
   }
+
+  @Post('logout')
+  @HttpCode(200)
+  public async logout() {
+    return { message: 'Logout successful' };
+  }
 }

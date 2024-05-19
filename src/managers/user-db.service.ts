@@ -5,7 +5,7 @@ import { SnowflakeService } from '@Project.Services/snowflake.service';
 import type { ModelInstance } from '@Project.Database/cql/express-cassandra/helpers';
 import type { IUser, IUserAuth } from '@Project.Database/cql/schemas/users.schema';
 import { ISignUpDto } from '@Project.Dtos/signup.dto';
-import { Nullable } from '@Project.Utils/types';
+import { Nullable, UserId } from '@Project.Utils/types';
 
 @Injectable()
 export class UserManagerService {
@@ -24,6 +24,12 @@ export class UserManagerService {
       { email },
       { select: ['user_id', 'username', 'credentials'], raw: true }
     )) as Nullable<IUserAuth>;
+  }
+  async getUserMeta(userId: UserId) {
+    return await this.model.findOneAsync(
+      { user_id: userId },
+      { select: ['display_name', 'username'] }
+    );
   }
   async createUser(data: ISignUpDto) {
     const { email, username, password, displayName } = data;
