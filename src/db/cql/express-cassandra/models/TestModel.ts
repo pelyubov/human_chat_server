@@ -1,7 +1,7 @@
-import { TestModel } from '@Project.Database/cql/schemas/test.schema';
+import { ITest } from '@Project.Database/cql/schemas/test.schema';
 import { SchemaDefinition } from '../schema';
 
-const model: SchemaDefinition<TestModel> = {
+const model: SchemaDefinition<ITest> = {
   table_name: 'test',
   fields: {
     ok: 'boolean',

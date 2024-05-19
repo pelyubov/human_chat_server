@@ -1,6 +1,6 @@
 import { MessageId, UserId, Nullable, ChannelId } from '@Project.Utils/types';
 
-export interface MessageModel {
+export interface IMessage {
   id: MessageId;
   author: UserId;
   reply_to: Nullable<MessageId>;

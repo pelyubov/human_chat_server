@@ -58,11 +58,3 @@ export type SchemaDefinition<
   before_delete?: (query: QueryObject<T>, options: DeleteQueryOptions) => boolean;
   after_delete?: (query: QueryObject<T>, options: DeleteQueryOptions) => boolean;
 };
-
-export const Long = DataStaxTypes.Long;
-export const TimeUuid = DataStaxTypes.TimeUuid;
-export const Uuid = DataStaxTypes.Uuid;
-export const Tuple = DataStaxTypes.Tuple;
-export const InetAddress = DataStaxTypes.InetAddress;
-export const BigDecimal = DataStaxTypes.BigDecimal;
-export const Duration = DataStaxTypes.Duration;

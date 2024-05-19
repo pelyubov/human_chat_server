@@ -1,11 +1,11 @@
-import type { TestModel } from './test.schema';
-import type { MessageModel } from './message.schema';
-import { UserModel } from './users.schema';
+import type { ITest } from './test.schema';
+import type { IMessage } from './message.schema';
+import { IUser } from './users.schema';
 
 export type AllSchemas = {
-  Test: TestModel;
-  Users: UserModel;
-  Messages: MessageModel;
+  Test: ITest;
+  Users: IUser;
+  Messages: IMessage;
 };
 
 export type TableName = keyof AllSchemas;

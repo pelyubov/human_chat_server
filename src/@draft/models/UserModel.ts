@@ -1,5 +1,5 @@
 import { SchemaDefinition } from '@Project.Database/cql/express-cassandra/schema';
-import { UserModel } from '@Project.Database/cql/schemas/users.schema';
+import { IUser } from '@Project.Database/cql/schemas/users.schema';
 
 const model /*: SchemaDefinition<UserModel> */ = {
   table_name: 'users',

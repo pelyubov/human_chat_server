@@ -1,3 +1,5 @@
+import { Long } from './types';
+
 export default class Snowflake {
   public static readonly epoch = new Date('2024-01-01').getTime();
   public static readonly workerIdBits = 6; // 64 workers
@@ -33,15 +35,19 @@ export default class Snowflake {
       this.sequence++;
     }
 
-    const diff = BigInt(timestamp - Snowflake.epoch);
-    return (
-      (diff << BigInt(Snowflake.workerIdBits + Snowflake.sequenceBits)) |
-      BigInt(this.workerId << Snowflake.sequenceBits) |
-      BigInt(this.sequence)
-    );
+    return Long.fromNumber(timestamp - Snowflake.epoch)
+      .shiftLeft(Snowflake.workerIdBits + Snowflake.sequenceBits)
+      .or(Long.fromNumber(this.workerId).shiftLeft(Snowflake.sequenceBits))
+      .or(Long.fromNumber(this.sequence));
   }
 
-  static timestamp(id: bigint) {
-    return Number(id >> BigInt(this.workerIdBits + this.sequenceBits)) + this.epoch;
+  static timestamp(id: InstanceType<typeof Long>) {
+    if (id.lte(0)) {
+      throw new Error(`InvalidId: ${id}`);
+    }
+    return Long.fromString(id.toString())
+      .shiftRight(Snowflake.workerIdBits + Snowflake.sequenceBits)
+      .add(Snowflake.epoch)
+      .toNumber();
   }
 }

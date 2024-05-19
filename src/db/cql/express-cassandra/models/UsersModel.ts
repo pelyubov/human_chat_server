@@ -1,7 +1,8 @@
-import { UserModel } from '@Project.Database/cql/schemas/users.schema';
-import { SchemaDefinition, Long } from '../schema';
+import { IUser } from '@Project.Database/cql/schemas/users.schema';
+import { SchemaDefinition } from '../schema';
+import { Long } from '@Project.Utils/types';
 
-const model: SchemaDefinition<UserModel> = {
+const model: SchemaDefinition<IUser> = {
   table_name: 'hc_users',
   fields: {
     user_id: 'bigint',
@@ -11,11 +12,7 @@ const model: SchemaDefinition<UserModel> = {
     username: 'text',
     bio: 'text'
   },
-  key: [['user_id'], 'email', 'username'],
-  before_save(instance: Record<string, any>) {
-    instance.user_id = Long.fromString(instance.user_id.toString());
-    return true;
-  }
+  key: [['user_id'], 'email', 'username']
 };
 
 export default model;

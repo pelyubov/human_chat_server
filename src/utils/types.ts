@@ -1,3 +1,13 @@
+import { types as DataStaxTypes } from 'cassandra-driver';
+
+export const Long = DataStaxTypes.Long;
+export const TimeUuid = DataStaxTypes.TimeUuid;
+export const Uuid = DataStaxTypes.Uuid;
+export const Tuple = DataStaxTypes.Tuple;
+export const InetAddress = DataStaxTypes.InetAddress;
+export const BigDecimal = DataStaxTypes.BigDecimal;
+export const Duration = DataStaxTypes.Duration;
+
 export type Nullable<T> = T | null;
 export type Optional<T> = T | undefined;
 export type Fn<A extends any[] = [], R = void> = (...args: A) => R;
@@ -20,9 +30,10 @@ export interface Jsonable {
   toJSON(): any;
 }
 
-export type MessageId = bigint;
-export type UserId = bigint;
-export type ChannelId = bigint;
+export type SnowflakeId = InstanceType<typeof Long>;
+export type MessageId = SnowflakeId;
+export type UserId = SnowflakeId;
+export type ChannelId = SnowflakeId;
 
 export interface CassandraConfig {
   contactPoints: string[];

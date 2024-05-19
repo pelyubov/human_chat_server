@@ -11,6 +11,7 @@ import {
   SingleQueryObject,
   UpdateQueryOptions
 } from './query';
+import { Nullable } from '@Project.Utils/types';
 
 type ModelQueryResult<T> = T & ModelInstance<T>;
 
@@ -42,8 +43,8 @@ export interface ModelInstance<T> {
     QueryOptions extends QueryOnly
       ? CqlQuery
       : QueryOptions extends QueryRaw | SelectStatement<T>
-        ? T
-        : ModelQueryResult<T>
+        ? Nullable<T>
+        : Nullable<ModelQueryResult<T>>
   >;
 
   updateAsync<QueryOptions extends UpdateQueryOptions<T>>(

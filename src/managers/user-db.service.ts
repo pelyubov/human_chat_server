@@ -3,20 +3,27 @@ import { hash } from 'bcrypt';
 import { CqlDbContext } from '@Project.Database/cql.db.service';
 import { SnowflakeService } from '@Project.Services/snowflake.service';
 import type { ModelInstance } from '@Project.Database/cql/express-cassandra/helpers';
-import type { UserModel } from '@Project.Database/cql/schemas/users.schema';
+import type { IUser, IUserAuth } from '@Project.Database/cql/schemas/users.schema';
 import { ISignUpDto } from '@Project.Dtos/signup.dto';
+import { Nullable } from '@Project.Utils/types';
 
 @Injectable()
-export class UserDbService {
+export class UserManagerService {
   constructor(
     private readonly db: CqlDbContext,
     private readonly snowflake: SnowflakeService
   ) {}
   get model() {
-    return this.db.model('Users') as ModelInstance<UserModel>;
+    return this.db.model('Users') as ModelInstance<IUser>;
   }
   async retrieveUser(email: string) {
     return await this.model.findOneAsync({ email }, { raw: true });
+  }
+  async retrieveUserAuth(email: string) {
+    return (await this.model.findOneAsync(
+      { email },
+      { select: ['user_id', 'username', 'credentials'], raw: true }
+    )) as Nullable<IUserAuth>;
   }
   async createUser(data: ISignUpDto) {
     const { email, username, password, displayName } = data;
