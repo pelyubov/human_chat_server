@@ -1,11 +1,11 @@
 import { ConsoleLogger, FactoryProvider, Global, Module } from '@nestjs/common';
 
 import { ConfigService } from '@Project.Services/config.service';
-import { DataStaxConnection } from './cql/datastax/datastax.db';
+import { DataStaxConnection } from './cql/datastax/connection';
+import { ExpressCassandraConnection } from './cql/express-cassandra/connection';
 import { GremlinConnection } from './graph/gremlin.db';
 import { CqlDbContext } from './cql.db.service';
 import { GremlinDbContext } from './gremlin.db.service';
-import { ExpressCassandraConnection } from './cql/express-cassandra/express-cassandra.db';
 
 const cqlDbProvider: FactoryProvider<CqlDbContext> = {
   useFactory(logger: ConsoleLogger, config: ConfigService) {

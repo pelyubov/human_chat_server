@@ -8,9 +8,6 @@ export type InstanceFields<T> = {
   [K in keyof T]: T[K] extends AnyFn ? never : K;
 };
 
-export type OptionalProps<T> = {
-  [K in keyof T]?: T[K];
-};
 export type RequiredProps<T> = {
   [K in keyof T]-?: T[K];
 };

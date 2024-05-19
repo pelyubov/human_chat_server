@@ -1,6 +1,8 @@
 import { CqlDbContext } from '@Project.Database/cql.db.service';
 import { ModelInstance } from '@Project.Database/cql/express-cassandra/helpers';
+import { User2Model } from '@Project.Database/cql/express-cassandra/models/UsersModel';
 import { AuthModel } from '@Project.Database/cql/schemas/auth.schema';
+import { UserModel } from '@Project.Database/cql/schemas/user.schema';
 import { SnowflakeService } from '@Project.Services/snowflake.service';
 import { Injectable } from '@nestjs/common';
 import { hash } from 'bcrypt';
@@ -12,7 +14,7 @@ export class AuthDbService {
     private snowflake: SnowflakeService
   ) {}
   get model() {
-    return this.db.model('Auth') as ModelInstance<AuthModel>;
+    return this.db.model('Auth') as ModelInstance<User2Model>;
   }
   async retrieveUser(email: string) {
     // const result = await this.db.connection.client.execute(

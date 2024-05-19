@@ -1,5 +1,4 @@
 import { Client as DataStaxClient } from 'cassandra-driver';
-import { OptionalProps } from '@Project.Utils/types';
 import {
   CqlQuery,
   DeleteQueryOptions,
@@ -49,7 +48,7 @@ export interface ModelInstance<T> {
 
   updateAsync<QueryOptions extends UpdateQueryOptions<T>>(
     query: QueryObject<T>,
-    updateValues: OptionalProps<T>,
+    updateValues: Partial<T>,
     options?: QueryOptions
   ): Promise<QueryOptions extends QueryOnly ? CqlQuery : T>;
 

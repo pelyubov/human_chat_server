@@ -1,4 +1,4 @@
-import { StringKeys, OptionalProps } from '@Project.Utils/types';
+import { StringKeys } from '@Project.Utils/types';
 
 type SelectAliasStatement<T extends string> = T | `${T} ${'AS' | 'as'} ${string}`;
 export interface CommonQueryOptions {
@@ -35,7 +35,7 @@ export interface UpdateQueryOptions<T> extends MutateQueryOptions {
   /** Perform an `IF EXISTS` check before mutating. */
   if_exists?: boolean;
   /** Conditions to match. */
-  conditions?: OptionalProps<T>;
+  conditions?: Partial<T>;
 }
 
 export interface InsertQueryOptions extends MutateQueryOptions {
