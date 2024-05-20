@@ -1,7 +1,7 @@
 import { Client as DataStaxClient } from 'cassandra-driver';
 import { ConsoleLogger, Injectable } from '@nestjs/common';
+import { TableName } from '@Project.Database/schemas';
 import { Jsonable } from '@Project.Utils/types';
-import { TableName } from './cql/schemas/schema';
 import { CqlDbConnectionImpl } from './cql/cql.db.iface';
 
 @Injectable()

@@ -29,8 +29,8 @@ table Channels {
 }
 
 enum FriendRelationStatus {
+  FRIEND
   PENDING
-  ACCEPTED
   BLOCKED
 }
 

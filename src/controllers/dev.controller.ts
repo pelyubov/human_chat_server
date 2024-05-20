@@ -1,8 +1,15 @@
 import { CqlDbContext } from '@Project.Database/cql.db.service';
 import { GremlinDbContext } from '@Project.Database/gremlin.db.service';
 import { ConfigService } from '@Project.Services/config.service';
-import { ConsoleLogger, Controller, Get, HttpStatus, Post, Res, SetMetadata } from '@nestjs/common';
-import { Response } from 'express';
+import {
+  ConsoleLogger,
+  Controller,
+  Get,
+  InternalServerErrorException,
+  NotFoundException,
+  Post,
+  SetMetadata
+} from '@nestjs/common';
 
 @Controller()
 export class DevController {
@@ -16,16 +23,16 @@ export class DevController {
   }
   @SetMetadata('skipAuth', true)
   @Get('/dev/status')
-  async hello(@Res() response: Response) {
-    if (!this.config.isDev) return response.sendStatus(HttpStatus.NOT_FOUND);
-    return response.status(HttpStatus.OK).json(await this.jsonifyServices());
+  async status() {
+    if (!this.config.isDev) throw new NotFoundException();
+    return await this.jsonifyServices();
   }
 
   @SetMetadata('skipAuth', true)
-  @Post('/dev/reloaddb')
-  async reloadDb(@Res() response: Response) {
+  @Post('/dev/reload-db-clients')
+  async reloadDb() {
     // TODO: Selectively reload databases
-    if (!this.config.isDev) return response.sendStatus(HttpStatus.NOT_FOUND);
+    if (!this.config.isDev) throw new NotFoundException();
     const errors: string[][] = [];
     try {
       await this.cqlDbContext.restartConnection(true);
@@ -37,14 +44,16 @@ export class DevController {
     } catch (e) {
       errors.push(['GremlinDbContext', e.toString()]);
     }
-    const hasErrors = errors.length > 0;
-    const code = hasErrors ? HttpStatus.INTERNAL_SERVER_ERROR : HttpStatus.OK;
-    return response.status(code).json({
-      message: hasErrors
-        ? 'At least one database service has failed to reload. Consult the error below for more details.'
-        : 'All database services have reloaded successfully.',
-      errors: hasErrors ? Object.fromEntries(errors) : null
-    });
+    if (errors.length) {
+      throw new InternalServerErrorException({
+        message:
+          'At least one database service has failed to reload. Consult the `errors` field below for more details.',
+        errors: Object.fromEntries(errors)
+      });
+    }
+    return {
+      message: 'All database services have reloaded successfully.'
+    };
   }
 
   async jsonifyServices() {

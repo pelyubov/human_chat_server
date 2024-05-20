@@ -1,4 +1,4 @@
-import { IUser } from '@Project.Database/cql/schemas/users.schema';
+import { IUser } from '@Project.Database/schemas/user.schema';
 import { SchemaDefinition } from '../schema';
 import { Long } from '@Project.Utils/types';
 

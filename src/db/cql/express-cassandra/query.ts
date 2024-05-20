@@ -96,7 +96,9 @@ export enum OrderOps {
 }
 
 export interface BuiltinQueryOps<T> {
-  [QueryOps.ORDER_BY]?: { [Ord in OrderOps]?: StringKeys<T> | StringKeys<T>[] };
+  [QueryOps.ORDER_BY]?: {
+    [Ord in OrderOps]?: StringKeys<T> | StringKeys<T>[];
+  };
   [QueryOps.GROUP_BY]?: StringKeys<T>[];
   [QueryOps.INDEX_EXPR]?: {
     index: string;
@@ -104,9 +106,9 @@ export interface BuiltinQueryOps<T> {
   };
 }
 
-export type TokenQuery<T> = {
+export type TokenQuery<T, K extends string> = {
   // [K2 in CompositeKeyQuery<StringKeys<T>>]?: {
-  [K2: string]:
+  [K2 in Exclude<K, StringKeys<T> | keyof BuiltinQueryOps<T>>]?:
     | T[keyof T]
     | {
         [QueryOps.TOKEN]?: {
@@ -116,15 +118,22 @@ export type TokenQuery<T> = {
     | undefined;
 };
 
-export type SingleQueryObject<T> = BuiltinQueryOps<T> &
-  TokenQuery<T> & {
-    [K in StringKeys<T>]?:
-      | T[K]
-      | { [QueryOps.IN]?: T[K][] }
-      | { [QueryOps.LIKE]?: string }
-      | { [Op in CompareOps]?: T[K] };
-  };
+export type SingleQueryObject<T, TK extends string = ''> =
+  // ! URGENT: `TokenQuery<T>` overrides the `BuiltinQueryOps` type
+  // !          and causes the properties of `BuiltinQueryOps` to be
+  // !          lost. This is due to the `TokenQuery` wider index signature (`string`).
+  // !
+  // ! Though, we can enforce a narrower constraint by casting the types manually.
+  // ! This is a temporary solution until a better solution is found.
+  TokenQuery<T, TK> &
+    BuiltinQueryOps<T> & {
+      [K in StringKeys<T>]?:
+        | T[K]
+        | { [QueryOps.IN]?: T[K][] }
+        | { [QueryOps.LIKE]?: string }
+        | { [Op in CompareOps]?: T[K] };
+    };
 
-export type QueryObject<T> = SingleQueryObject<T> & {
+export type QueryObject<T, TK extends string = ''> = SingleQueryObject<T, TK> & {
   [Op in LimitOps]?: number;
 };

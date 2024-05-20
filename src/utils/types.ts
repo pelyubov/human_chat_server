@@ -31,15 +31,8 @@ export type MessageId = SnowflakeId;
 export type UserId = SnowflakeId;
 export type ChannelId = SnowflakeId;
 
-export interface CassandraConfig {
-  contactPoints: string[];
-  localDataCenter: string;
-  keyspace: string;
-  port: number;
-}
-
-export interface GremlinConfig {
-  host: string;
-  port: number;
-  endpoint: string;
+export enum FriendRelationStatus {
+  FRIEND,
+  PENDING,
+  BLOCKED
 }

@@ -15,7 +15,7 @@ import { AuthGuard } from './auth.guard';
         return {
           secret: scrambleStrings(config.jwtSecret, salt),
           signOptions: {
-            expiresIn: '60s'
+            expiresIn: '1h'
           }
         };
       },

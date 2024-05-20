@@ -48,14 +48,18 @@ export class AuthService {
   }
 
   async verify(token: string) {
-    if (!(await this.jwt.verifyAsync(token))) {
+    const actualToken = /^Bearer (.+)$/.exec(token)?.[1];
+    if (!actualToken) {
       throw new UnauthorizedException('Invalid token');
     }
-    if (!this.activeTokens.has(token)) {
+    if (!(await this.jwt.verifyAsync(actualToken))) {
+      throw new UnauthorizedException('Invalid token');
+    }
+    if (!this.activeTokens.has(actualToken)) {
       throw new UnauthorizedException('Token expired');
     }
-    const tokenData = this.activeTokens.get(token)!;
-    // TODO: This check might be redundant
+    const tokenData = this.activeTokens.get(actualToken)!;
+    // This check might be redundant
     // The token is already "blocked" the moment it's not in the activeTokens map
     // if (tokenData.blocked) {
     //   throw new UnauthorizedException('Token expired: Blocked');

@@ -25,7 +25,7 @@ export interface ModelInstance<T> {
   // eslint-disable-next-line @typescript-eslint/no-misused-new
   new (data: T): ModelInstance<T>;
 
-  findAsync<QueryOptions extends SelectQueryOptions<T>>(
+  findAsync<QueryOptions extends UpdateQueryOptions<T>>(
     query: QueryObject<T>,
     options?: QueryOptions
   ): Promise<

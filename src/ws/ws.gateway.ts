@@ -3,24 +3,33 @@ import {
   ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
+  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer
 } from '@nestjs/websockets';
-import { WebSocket, Server } from 'ws';
+import { WebSocket, Server as WsServer } from 'ws';
 import { IncomingMessage } from 'http';
 import { AuthService } from '../auth/auth.service';
-import { UserId } from '@Project.Utils/types';
+import { ChannelId, UserId } from '@Project.Utils/types';
 import { UserManagerService } from '@Project.Managers/user-manager.service';
-import { IUserMeta } from '@Project.Database/cql/schemas/users.schema';
+import { IUserMeta } from '@Project.Database/schemas/user.schema';
 import { ChannelManagerService } from '@Project.Managers/channel-manager.service';
+import { IMessage } from '@Project.Database/schemas/message.schema';
+import { UUID, randomUUID } from 'crypto';
+import { IIncomingMessageDto } from '@Project.Dtos/message.dto';
+
+interface IUserSession extends WebSocket {
+  clientId: UUID;
+  userId: UserId;
+}
 
 // @UseGuards(AuthGuard)
 @WebSocketGateway(3001)
-export class WsGateway implements OnGatewayConnection {
-  @WebSocketServer() private readonly server: Server;
+export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  @WebSocketServer() private readonly server: WsServer;
 
-  private readonly clients = new Map<UserId, WebSocket[]>();
+  private readonly clients = new Map<UserId, Map<UUID, WebSocket>>();
   constructor(
     private readonly logger: ConsoleLogger,
     private readonly users: UserManagerService,
@@ -32,48 +41,36 @@ export class WsGateway implements OnGatewayConnection {
 
   // TODO: Add channels
   // TODO: Add session IDs for users with multiple connections
-  async handleConnection(client: WebSocket & IUserMeta, message: IncomingMessage) {
+  async handleConnection(client: IUserSession, message: IncomingMessage) {
     const token = message.headers.authorization;
     if (!token) {
       this.logger.error(`${message.headers.origin} has no token`, 'WsGateway.Unauthorized');
       client.close();
       return;
     }
-    const actualToken = token.split(' ')[1];
     try {
-      const userId = await this.auth.verify(actualToken);
-      if (!this.clients.has(userId)) {
-        this.clients.set(userId, [client]);
-      } else {
-        this.clients.get(userId)!.push(client);
-      }
-      const userMeta = (await this.users.fetch(userId))!;
-      const message = `User ${userMeta.display_name} (@${userMeta.username}) has connected.`;
-      client.user_id = userId;
-      Object.assign(client, userMeta);
-      this.server.clients.forEach((c) => {
-        if (c.readyState === WebSocket.OPEN) {
-          // c.send(JSON.stringify({ event: 'message', data: message }));
-          c.send(message);
-        }
-      });
-      this.logger.log(message, 'WsGateway');
-      client.on('close', () => {
-        this.clients.get(userId)!.splice(this.clients.get(userId)!.indexOf(client), 1);
-        if (this.clients.get(userId)!.length) return;
+      const userId = await this.auth.verify(token);
+      const socketId = randomUUID();
+      client.userId = userId;
+      client.clientId = socketId;
 
-        this.clients.delete(userId);
-        const message = `User ${userMeta.display_name} (@${userMeta.username}) has disconnected.`;
-        for (const c of this.server.clients) {
-          if (c.readyState !== WebSocket.OPEN) continue;
-          c.send(message);
-        }
-        this.logger.log(message, 'WsGateway');
-      });
+      if (this.clients.has(userId)) {
+        this.clients.get(userId)!.set(socketId, client);
+      } else {
+        this.clients.set(userId, new Map([[socketId, client]]));
+      }
+
+      this.logger.log(`Client(${socketId}) [User(${userId})] has connected.`, 'WsGateway');
     } catch (e) {
-      this.logger.error(`${e.message}, token: ${actualToken}`, 'WsGateway.Unauthorized');
+      this.logger.error(`${e.message}, token: ${token}`, 'WsGateway.Unauthorized');
       client.close();
     }
+  }
+
+  async handleDisconnect(client: IUserSession) {
+    const { userId, clientId } = client;
+    this.clients.get(userId)!.delete(clientId);
+    this.logger.log(`Client(${clientId}) [User(${userId})] has disconnected.`, 'WsGateway');
   }
 
   @SubscribeMessage('message')
@@ -108,5 +105,27 @@ export class WsGateway implements OnGatewayConnection {
     //   data: channels
     // };
     client.send(JSON.stringify({}));
+  }
+
+  sendMessage(channelId: ChannelId, user: IUserSession, message: IIncomingMessageDto) {
+    const { content, replyTo } = message;
+    const data = {
+      event: 'message',
+      data: {
+        userId: user.userId.toBigInt(),
+        channelId: channelId.toBigInt(),
+        content: message.content
+      }
+    };
+  }
+
+  authChallenge(client: WebSocket) {
+    // client.send('auth');
+    // send a challenge to the client
+    // client sends back ACK with token
+    // server verifies token
+    // server can either accept or reject the connection
+    // if accepted, server sends channel metadata
+    // if rejected, server sends a message and closes the connection
   }
 }

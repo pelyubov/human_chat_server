@@ -1,5 +1,5 @@
 import { ConsoleLogger, Injectable } from '@nestjs/common';
-import { GremlinConnection } from './graph/gremlin.db';
+import { GremlinConnection } from './graph/gremlin/connection';
 import { Jsonable } from '@Project.Utils/types';
 
 @Injectable()

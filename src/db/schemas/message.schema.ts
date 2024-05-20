@@ -6,5 +6,5 @@ export interface IMessage {
   reply_to: Nullable<MessageId>;
   channel: ChannelId;
   content: string;
-  last_edit: Date;
+  last_edit: Nullable<number>;
 }

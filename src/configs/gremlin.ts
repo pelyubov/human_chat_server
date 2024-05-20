@@ -1,5 +1,5 @@
 import { getenv } from '@Project.Utils/helpers';
-import { GremlinConfig } from '@Project.Utils/types';
+import { GremlinConfig } from '@Project.Database/graph/gremlin/types';
 
 export default (): GremlinConfig => ({
   host: getenv('JANUSGRAPH_HOST'),

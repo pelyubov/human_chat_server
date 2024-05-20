@@ -77,8 +77,11 @@ export class GremlinConnection implements Jsonable {
     if (!force && this._client?.isOpen) {
       return;
     }
+    this.logger.log('Reconnection procedure initiated.', 'Gremlin.Driver');
     await this.close();
+    this.logger.log('Reconnecting...', 'Gremlin.Driver');
     await this.connect();
+    this.logger.log('Reconnection procedure completed successfully.', 'Gremlin.Driver');
   }
 
   private async test(g: GraphTraversalSource) {

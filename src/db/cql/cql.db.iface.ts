@@ -1,5 +1,5 @@
 import { Jsonable } from '@Project.Utils/types';
-import { TableName } from './schemas/schema';
+import { TableName } from '@Project.Database/schemas';
 
 export abstract class CqlDbConnectionImpl<Client = unknown> implements Jsonable {
   abstract get client(): Client;

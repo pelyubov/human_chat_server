@@ -1,15 +1,15 @@
+import { AssertionError } from 'assert';
 import * as ExpressCassandra from 'express-cassandra';
 import {
   ClientOptions as CassandraDriverOptions,
   types as CassandraDriverTypes
 } from 'cassandra-driver';
 import { ConsoleLogger } from '@nestjs/common';
-import { Jsonable, VoidFn } from '@Project.Utils/types';
-import { AssertionError } from 'assert';
+import { Schema, TableName } from '@Project.Database/schemas';
 import { ConfigService } from '@Project.Services/config.service';
-import { CqlDbConnectionImpl } from '../cql.db.iface';
-import { Schema, TableName } from '../schemas/schema';
+import { Jsonable, VoidFn } from '@Project.Utils/types';
 import { ModelInstance } from './helpers';
+import { CqlDbConnectionImpl } from '../cql.db.iface';
 
 export class ExpressCassandraConnection
   extends CqlDbConnectionImpl<ExpressCassandra>
@@ -36,38 +36,42 @@ export class ExpressCassandraConnection
   }
 
   async init() {
-    await this.connect();
-  }
-
-  async connect() {
     try {
-      const { contactPoints, keyspace, localDataCenter, port } = this.config.cassandraConfig;
-      ExpressCassandra.setDirectory(__dirname + '/models');
-      await ExpressCassandra.bindAsync({
-        clientOptions: {
-          contactPoints,
-          keyspace,
-          localDataCenter,
-          queryOptions: { prepare: true },
-          protocolOptions: {
-            port,
-            maxVersion: CassandraDriverTypes.protocolVersion.maxSupported
-          }
-        } as CassandraDriverOptions,
-        ormOptions: {
-          createKeyspace: false
-          // createTable: true
-        }
-      });
-
-      await this.test(ExpressCassandra);
-      this.expressCassandra = ExpressCassandra;
-      this.logger.log('Initialization completed successfully.', 'ExpressCassandra');
+      await this.connect();
     } catch (e) {
       this.logger.error(`An error ocurred while setting up ExpressCassandra`, 'ExpressCassandra');
       this.logger.error(e, 'ExpressCassandra');
       this.logger.error('Initialization failed.', 'ExpressCassandra');
     }
+  }
+
+  async connect() {
+    const { contactPoints, keyspace, localDataCenter, port } = this.config.cassandraConfig;
+    ExpressCassandra.setDirectory(__dirname + '/models');
+    this.logger.log('Initializing ExpressCassandra', 'ExpressCassandra');
+    this.logger.log(`contactPoints: ${contactPoints}`, 'ExpressCassandra.Parameters');
+    this.logger.log(`keyspace: ${keyspace}`, 'ExpressCassandra.Parameters');
+    this.logger.log(`localDataCenter: ${localDataCenter}`, 'ExpressCassandra.Parameters');
+    this.logger.log(`port: ${port}`, 'ExpressCassandra.Parameters');
+    await ExpressCassandra.bindAsync({
+      clientOptions: {
+        contactPoints,
+        keyspace,
+        localDataCenter,
+        queryOptions: { prepare: true },
+        protocolOptions: {
+          port,
+          maxVersion: CassandraDriverTypes.protocolVersion.maxSupported
+        }
+      } as CassandraDriverOptions,
+      ormOptions: {
+        createKeyspace: false
+        // createTable: true
+      }
+    });
+
+    await this.test(ExpressCassandra);
+    this.expressCassandra = ExpressCassandra;
   }
 
   async test(client: ExpressCassandra) {
@@ -85,8 +89,11 @@ export class ExpressCassandraConnection
   async reconnect(force = false) {
     if (!force) {
     }
+    this.logger.log('Reconnection procedure initiated.', 'ExpressCassandra');
     await this.close();
+    this.logger.log('Shutdown complete. Starting client...', 'ExpressCassandra');
     await this.connect();
+    this.logger.log('Reconnection procedure completed successfully.', 'ExpressCassandra');
   }
 
   registerListener(listener: VoidFn<[Error]>) {

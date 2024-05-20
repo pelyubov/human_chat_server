@@ -3,7 +3,7 @@ import { CommonServicesModule } from '@Project.Services/services.module';
 import { ConfigService } from '@Project.Services/config.service';
 // import { DataStaxConnection } from './cql/datastax/connection';
 import { ExpressCassandraConnection } from './cql/express-cassandra/connection';
-import { GremlinConnection } from './graph/gremlin.db';
+import { GremlinConnection } from './graph/gremlin/connection';
 import { CqlDbContext } from './cql.db.service';
 import { GremlinDbContext } from './gremlin.db.service';
 

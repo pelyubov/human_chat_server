@@ -8,10 +8,10 @@ import {
   mapping as DataStaxMapping
 } from 'cassandra-driver';
 
+import { Schema, TableName } from '@Project.Database/schemas';
 import type { ConfigService } from '@Project.Services/config.service';
 import { Jsonable, VoidFn } from '@Project.Utils/types';
 import { CqlDbConnectionImpl } from '../cql.db.iface';
-import { Schema, TableName } from '../schemas/schema';
 import { TableModel } from './helpers';
 
 export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> implements Jsonable {
@@ -88,15 +88,16 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
       return;
     }
     try {
-      this.logger.log('Reconnecting DataStaxDriver', 'DataStax.Driver');
+      this.logger.log('Reconnection procedure initiated.', 'DataStax.Driver');
       await this.client.shutdown();
       this.logger.log('Shutdown completed. Reconnecting...', 'DataStax.Driver');
       await this.connect();
       await this.test(this._client!);
       this.logger.log('Reconnection completed successfully.', 'DataStax.Driver');
     } catch (e) {
-      this.logger.error('Reconnection failed.', 'DataStax.Driver');
+      this.logger.error('Reconnection procedure failed.', 'DataStax.Driver');
       this.logger.error(e, 'DataStax.Driver');
+      throw e;
     }
   }
 

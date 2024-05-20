@@ -1,5 +1,5 @@
 import { getenv } from '@Project.Utils/helpers';
-import { CassandraConfig } from '@Project.Utils/types';
+import { CassandraConfig } from '@Project.Database/cql/types';
 
 export default (): CassandraConfig => ({
   contactPoints: getenv('CASSANDRA_HOSTS').split(','),

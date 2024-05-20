@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { DevController } from '@Project.Controllers/dev.controller';
 import { SignUpController } from '@Project.Controllers/signup.controller';
+import { ChannelController } from '@Project.Controllers/chat.controller';
 import { DbModule } from '@Project.Database/db.module';
-import { CommonServicesModule } from '@Project.Services/services.module';
 import { ManagersModule } from '@Project.Managers/managers.module';
+import { CommonServicesModule } from '@Project.Services/services.module';
 import { AuthModule } from './auth/auth.module';
 import { WsModule } from './ws/ws.module';
-import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -18,10 +19,10 @@ import { CacheModule } from '@nestjs/cache-manager';
     CommonServicesModule,
     DbModule,
     ManagersModule,
-    AuthModule,
-    WsModule
+    WsModule,
+    AuthModule
   ],
   providers: [],
-  controllers: [DevController, SignUpController]
+  controllers: [DevController, SignUpController, ChannelController]
 })
 export class AppModule {}

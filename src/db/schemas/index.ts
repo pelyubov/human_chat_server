@@ -1,6 +1,6 @@
 import type { ITest } from './test.schema';
 import type { IMessage } from './message.schema';
-import { IUser } from './users.schema';
+import { IUser } from './user.schema';
 
 export type AllSchemas = {
   Test: ITest;
