@@ -1,4 +1,4 @@
-import { UserId } from '@Project.Utils/types';
+import { Long, UserId } from '@Project.Utils/types';
 
 export interface IUser {
   user_id: UserId;
@@ -16,7 +16,9 @@ export interface IUserAuth {
 }
 
 export interface IUserMeta {
-  user_id: UserId;
+  user_id: Long;
   display_name: string;
   username: string;
+  bio: string;
+  channels: Set<bigint>;
 }

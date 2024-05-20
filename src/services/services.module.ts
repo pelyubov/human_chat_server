@@ -8,7 +8,7 @@ import { ConsoleLogger, Global, Module } from '@nestjs/common';
   exports: [ConsoleLogger, ConfigService, SnowflakeService]
 })
 export class CommonServicesModule {
-  constructor(private logger: ConsoleLogger) {
+  constructor(private readonly logger: ConsoleLogger) {
     this.logger.log('CommonServicesModule initialized', 'CommonServicesModule');
   }
 }

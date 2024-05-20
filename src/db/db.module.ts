@@ -1,17 +1,16 @@
 import { ConsoleLogger, FactoryProvider, Global, Module } from '@nestjs/common';
+import { CommonServicesModule } from '@Project.Services/services.module';
 import { ConfigService } from '@Project.Services/config.service';
-import { DataStaxConnection } from './cql/datastax/connection';
+// import { DataStaxConnection } from './cql/datastax/connection';
 import { ExpressCassandraConnection } from './cql/express-cassandra/connection';
 import { GremlinConnection } from './graph/gremlin.db';
 import { CqlDbContext } from './cql.db.service';
 import { GremlinDbContext } from './gremlin.db.service';
-import { CommonServicesModule } from '@Project.Services/services.module';
 
 const cqlDbProvider: FactoryProvider<CqlDbContext> = {
   useFactory(logger: ConsoleLogger, config: ConfigService) {
-    new DataStaxConnection(logger, config);
     const connection =
-      //
+      // new DataStaxConnection(logger, config);
       new ExpressCassandraConnection(logger, config);
     return new CqlDbContext(connection, logger);
   },
@@ -36,7 +35,7 @@ const gremlinDbProvider: FactoryProvider<GremlinDbContext> = {
   exports: [CqlDbContext, GremlinDbContext]
 })
 export class DbModule {
-  constructor(private logger: ConsoleLogger) {
+  constructor(private readonly logger: ConsoleLogger) {
     this.logger.log('DbModule initialized', 'DbModule');
   }
 }

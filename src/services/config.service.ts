@@ -13,41 +13,41 @@ export class ConfigService implements Jsonable {
   private _workerId = parseInt(getenv('WORKER_ID'));
   private _jwtSecret = getenv('JWT_SECRET');
 
-  public get nodeEnv() {
+  get nodeEnv() {
     return this._nodeEnv;
   }
 
-  public get cassandraConfig() {
+  get cassandraConfig() {
     return this._cassandraConfig;
   }
 
-  public get gremlinConfig() {
+  get gremlinConfig() {
     return this._gremlinConfig;
   }
 
-  public get isDev() {
+  get isDev() {
     return this._nodeEnv === 'development';
   }
 
-  public get workerId() {
+  get workerId() {
     return this._workerId;
   }
 
-  public get jwtSecret() {
+  get jwtSecret() {
     return this._jwtSecret;
   }
 
-  constructor(private logger: ConsoleLogger) {
+  constructor(private readonly logger: ConsoleLogger) {
     delete process.env.JWT_SECRET;
     this.logger.log('ConfigService initialized', 'ConfigService');
   }
 
-  public refresh() {
+  refresh() {
     this._cassandraConfig = cassandraConfig();
     this._gremlinConfig = gremlinConfig();
   }
 
-  public allConfig() {
+  allConfig() {
     return {
       nodeEnv: this._nodeEnv,
       workerId: this._workerId,

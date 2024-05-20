@@ -13,6 +13,9 @@ export class GremlinDbContext implements Jsonable {
   async restartConnection(force = false) {
     await this.connection.reconnect(force);
   }
+  get g() {
+    return this.connection.g;
+  }
   toJSON() {
     return {
       connection: this.connection.toJSON()

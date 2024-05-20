@@ -27,7 +27,7 @@ import { AuthGuard } from './auth.guard';
   exports: [AuthService, AuthGuard]
 })
 export class AuthModule {
-  constructor(private logger: ConsoleLogger) {
+  constructor(private readonly logger: ConsoleLogger) {
     this.logger.log('AuthModule initialized', 'AuthModule');
   }
 }

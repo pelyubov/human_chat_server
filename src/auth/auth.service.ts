@@ -7,7 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcrypt';
 import { ILoginDto } from '../dtos/login.dto';
-import { UserManagerService } from '@Project.Managers/user-db.service';
+import { UserManagerService } from '@Project.Managers/user-manager.service';
 import { UserId } from '@Project.Utils/types';
 
 interface IToken {
@@ -48,22 +48,22 @@ export class AuthService {
   }
 
   async verify(token: string) {
-    // TODO: Some checks might be redundant here. Not sure what.
-    if (!this.activeTokens.has(token)) {
-      throw new UnauthorizedException('Invalid token');
-    }
     if (!(await this.jwt.verifyAsync(token))) {
       throw new UnauthorizedException('Invalid token');
     }
-    const tokenData = this.activeTokens.get(token)!;
-    if (tokenData.blocked) {
+    if (!this.activeTokens.has(token)) {
       throw new UnauthorizedException('Token expired');
     }
+    const tokenData = this.activeTokens.get(token)!;
+    // TODO: This check might be redundant
+    // The token is already "blocked" the moment it's not in the activeTokens map
+    // if (tokenData.blocked) {
+    //   throw new UnauthorizedException('Token expired: Blocked');
+    // }
     return tokenData.uid as UserId;
   }
 
-  async logout(token: string) {
+  logout(token: string) {
     this.activeTokens.delete(token);
-    return { message: 'Logout successful' };
   }
 }

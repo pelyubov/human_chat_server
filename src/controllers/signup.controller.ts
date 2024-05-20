@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { ZodError } from 'zod';
 import { Body, ConsoleLogger, Controller, HttpStatus, Post, Res } from '@nestjs/common';
 import { ISignUpDto, SignUpDto } from '@Project.Dtos/signup.dto';
-import { UserManagerService } from '@Project.Managers/user-db.service';
+import { UserManagerService } from '@Project.Managers/user-manager.service';
 import { formatError } from '@Project.Utils/helpers';
 
 @Controller('api')
@@ -15,7 +15,7 @@ export class SignUpController {
   }
 
   @Post('signup')
-  public async signUp(@Body() body: ISignUpDto, @Res() response: Response) {
+  async signUp(@Body() body: ISignUpDto, @Res() response: Response) {
     try {
       const result = await SignUpDto.parseAsync(body);
       if (await this.userManager.existsEmail(result.email)) {

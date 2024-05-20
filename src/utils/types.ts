@@ -1,6 +1,7 @@
 import { types as DataStaxTypes } from 'cassandra-driver';
+import { Long2 as Long } from './long2';
 
-export const Long = DataStaxTypes.Long;
+export { Long2 as Long } from './long2';
 export const TimeUuid = DataStaxTypes.TimeUuid;
 export const Uuid = DataStaxTypes.Uuid;
 export const Tuple = DataStaxTypes.Tuple;
@@ -14,23 +15,18 @@ export type Fn<A extends any[] = [], R = void> = (...args: A) => R;
 export type VoidFn<A extends any[] = []> = Fn<A>;
 export type AnyFn = Fn<any[], any>;
 export type Constructor<T = any> = new (...args: any[]) => T;
-export type InstanceFields<T> = {
-  [K in keyof T]: T[K] extends AnyFn ? never : K;
-};
+export type EmptyFn = () => void;
 
 export type RequiredProps<T> = {
   [K in keyof T]-?: T[K];
 };
 
 export type StringKeys<T> = Extract<keyof T, string>;
-
-export type EmptyFn = () => void;
-
 export interface Jsonable {
   toJSON(): any;
 }
 
-export type SnowflakeId = InstanceType<typeof Long>;
+export type SnowflakeId = Long;
 export type MessageId = SnowflakeId;
 export type UserId = SnowflakeId;
 export type ChannelId = SnowflakeId;

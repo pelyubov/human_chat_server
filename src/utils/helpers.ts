@@ -1,4 +1,6 @@
 import { ZodError } from 'zod';
+import { types as DataStaxTypes } from 'cassandra-driver';
+import Long from 'long';
 
 /**
  * Throws an error indicating that a function is not implemented.

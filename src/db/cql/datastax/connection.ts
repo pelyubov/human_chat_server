@@ -24,11 +24,11 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
       throw new Error('DataStaxDriver is not initialized');
     }
   }
-  public get client() {
+  get client() {
     this.assertClient();
     return this._client!;
   }
-  public get mapper() {
+  get mapper() {
     this.assertClient();
     return this._mapper!;
   }
@@ -130,7 +130,7 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
     this.logger.log('Read test completed successfully.', 'DataStax.Driver');
   }
 
-  public async registerModelFolder(path: string) {
+  async registerModelFolder(path: string) {
     for (const file of await readdir(path)) {
       if (!file.match(/\.model\.js$/)) continue;
       const modelName = file.split('.').slice(0, -2)[0];
@@ -158,7 +158,7 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
     }
   }
 
-  public async establishMappings() {
+  async establishMappings() {
     this.assertClient();
     try {
       this.logger.log('Establishing mappings...', 'DataStax.Mappings');
@@ -199,15 +199,15 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
     this.logger.log('Mapping tests passed.', 'DataStax.Mappings');
   }
 
-  public addEventListener(event: string, listener: VoidFn) {
+  addEventListener(event: string, listener: VoidFn) {
     this.client.on(event, listener);
   }
 
-  public removeEventListener(event: string, listener: VoidFn) {
+  removeEventListener(event: string, listener: VoidFn) {
     this.client.removeListener(event, listener);
   }
 
-  public model<ModelName extends TableName>(name: ModelName) {
+  model<ModelName extends TableName>(name: ModelName) {
     this.assertClient();
     return new TableModel<Schema<ModelName>>(
       this.mapper.forModel<Schema<ModelName>>(name.toLowerCase())

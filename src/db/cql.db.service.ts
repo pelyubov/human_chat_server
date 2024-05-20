@@ -7,7 +7,7 @@ import { CqlDbConnectionImpl } from './cql/cql.db.iface';
 @Injectable()
 export class CqlDbContext implements Jsonable {
   constructor(
-    public readonly connection: CqlDbConnectionImpl<DataStaxClient>,
+    readonly connection: CqlDbConnectionImpl<DataStaxClient>,
     private readonly logger: ConsoleLogger
   ) {
     this.logger.log('CqlDbContext initialized', 'CqlDbContext');

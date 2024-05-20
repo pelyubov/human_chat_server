@@ -19,7 +19,7 @@ export class ExpressCassandraConnection
   private expressCassandra: ExpressCassandra;
   private listeners: VoidFn<[Error]>[] = [];
 
-  public get client() {
+  get client() {
     return this.expressCassandra.driver;
   }
 
