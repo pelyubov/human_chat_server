@@ -1,7 +1,9 @@
+import { Long as Long2 } from './types';
+
 export default class Snowflake {
-  public static readonly epoch = new Date('2024-01-01').getTime();
-  public static readonly workerIdBits = 6; // 64 workers
-  public static readonly sequenceBits = 16; // 65536 ids per ms
+  static readonly epoch = new Date('2024-01-01').getTime();
+  static readonly workerIdBits = 6; // 64 workers
+  static readonly sequenceBits = 16; // 65536 ids per ms
 
   private sequence = 0;
 
@@ -33,15 +35,18 @@ export default class Snowflake {
       this.sequence++;
     }
 
-    const diff = BigInt(timestamp - Snowflake.epoch);
-    return (
-      (diff << BigInt(Snowflake.workerIdBits + Snowflake.sequenceBits)) |
-      BigInt(this.workerId << Snowflake.sequenceBits) |
-      BigInt(this.sequence)
-    );
+    return Long2.fromNumber(timestamp - Snowflake.epoch)
+      .shiftLeft(Snowflake.workerIdBits + Snowflake.sequenceBits)
+      .or(Long2.fromNumber(this.workerId).shiftLeft(Snowflake.sequenceBits))
+      .or(Long2.fromNumber(this.sequence));
   }
 
-  static timestamp(id: bigint) {
-    return Number(id >> BigInt(this.workerIdBits + this.sequenceBits)) + this.epoch;
+  static timestamp(id: Long2 | bigint | number) {
+    return new Date(
+      Long2.fromValue(id)
+        .shiftRight(Snowflake.workerIdBits + Snowflake.sequenceBits)
+        .add(Snowflake.epoch)
+        .toNumber()
+    );
   }
 }

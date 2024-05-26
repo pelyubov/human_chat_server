@@ -1,29 +1,38 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "declaration": true,
+    "declaration": false,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
+    "noErrorTruncation": true,
     "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "@Project.Test/*": ["test/*"],
+      "@Project.Tests/*": ["test/*"],
+      "@Project.Controllers/*": ["src/controllers/*"],
+      "@Project.Configs/*": ["src/configs/*"],
+      "@Project.Routes/*": ["src/controllers/*"],
+      "@Project.Managers/*": ["src/managers/*"],
+      "@Project.Middlewares/*": ["src/middlewares/*"],
+      "@Project.Dtos/*": ["src/dtos/*"],
       "@Project.Database/*": ["src/db/*"],
       "@Project.Utils/*": ["src/utils/*"],
       "@Project.Entities/*": ["src/entities/*"],
-      "@Project.Root/*": ["src/*"],
+      "@Project.Services/*": ["src/services/*"],
+      "@Project.Root/*": ["./*"],
       // "*": ["node_modules/*"]
     },
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  "include": ["./**/*.ts", "./**/*.d.ts"],
 }

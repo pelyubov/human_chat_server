@@ -1,6 +1,17 @@
 {
   "debug.javascript.autoAttachFilter": "disabled",
-  "cassandraWorkbench.activeClusterName": "human_chat",
-  "cassandraWorkbench.activeKeyspace": [["human_chat", null]],
-  "files.eol": "\n"
+  "cassandraWorkbench.activeClusterName": "ZeroTier",
+  "cassandraWorkbench.activeKeyspace": [
+    [
+      "human_chat",
+      null
+    ],
+    [
+      "ZeroTier",
+      "human_chat"
+    ]
+  ],
+  "files.eol": "\n",
+  "cassandraWorkbench.splitPosition": 64.29901502617031,
+  "liveshare.languages.allowGuestCommandControl": true
 }

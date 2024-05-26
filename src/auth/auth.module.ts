@@ -1,28 +1,33 @@
-import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { ConsoleLogger, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { UserService } from 'src/user/user.service';
 import { AuthController } from './auth.controller';
-import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
-
+import { ConfigService } from '../services/config.service';
+import { hash } from 'bcrypt';
+import { scrambleStrings } from '@Project.Utils/helpers';
+import { AuthGuard } from './auth.guard';
 @Module({
   imports: [
-    UserService,
-    JwtModule.register({
+    JwtModule.registerAsync({
       global: true,
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '7d' },
-    }),
+      async useFactory(config: ConfigService) {
+        const salt = await hash(config.jwtSecret, 10);
+        return {
+          secret: scrambleStrings(config.jwtSecret, salt),
+          signOptions: {
+            expiresIn: '1h'
+          }
+        };
+      },
+      inject: [ConfigService]
+    })
   ],
-  providers: [
-    AuthService,
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
-  ],
-
+  providers: [AuthService, AuthGuard],
   controllers: [AuthController],
+  exports: [AuthService, AuthGuard]
 })
-export class AuthModule {}
+export class AuthModule {
+  constructor(private readonly logger: ConsoleLogger) {
+    this.logger.log('AuthModule initialized', 'AuthModule');
+  }
+}

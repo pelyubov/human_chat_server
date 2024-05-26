@@ -1,0 +1,59 @@
+typedef Snowflake bigint(64) struct {
+  u1  none,
+  u41 time,
+  u10 worker,
+  u12 increment
+}
+
+table User {
+  user_id       Snowflake PRIMARY KEY
+  email         string
+  username      string
+  credentials   string                  # chuỗi mã hóa
+  display_name  string
+  bio           string
+}
+table Messages {
+  message_id    Snowflake PRIMARY KEY
+  author_id     Snowflake
+  channel_id    Snowflake
+  reply_to      Snowflake?
+  content       string
+  last_edit     DateTime?
+  attachments   Set<Snowflake>
+}
+table Attachments {
+	att_id        Snowflake PRIMARY KEY
+	file_name     string
+	att_type      string
+	url		        string
+}
+table Channels {
+  channel_id    Snowflake PRIMARY KEY
+  name          string
+}
+
+enum FriendRelationshipStatus {
+  FRIEND
+  PENDING
+  BLOCKED
+}
+
+graph.edge dual relationship {
+  status        FriendRelationshipStatus
+}
+
+graph.edge channelMember {
+  owner?        bool
+}
+
+graph.vert Channel {
+  id            Snowflake
+  edge          channelMember <- User
+}
+
+graph.vert User {
+  id		        Snowflake
+  edge?         channelMember -> Group
+  edge?         relationship -> User
+}

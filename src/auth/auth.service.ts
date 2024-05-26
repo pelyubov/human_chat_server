@@ -1,71 +1,147 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConsoleLogger,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { CreateUserDto } from 'src/user/dtos/createUser.dto';
-import { UserService } from 'src/user/user.service';
-import { HashingPassword } from './hashingPassword';
-import { Mailer } from '@Project.Root/utils/mail/mailer';
-import { pinCodeGen } from '@Project.Root/utils/mail/pinGenerate';
+import { compare } from 'bcrypt';
+import { ILoginDto } from '../dtos/user/login.dto';
+import { Long, Nullable } from '@Project.Utils/types';
+import { CqlDbContext } from '@Project.Database/cql.db.service';
+import { ModelInstance } from '@Project.Database/cql/express-cassandra/helpers';
+import type { IUserAuth, IUserMeta } from '@Project.Database/schemas/user.schema';
+
+type AccessToken = string;
+type RefreshToken = string;
+type TokenMeta = {
+  userId: string;
+  username: string;
+};
 
 @Injectable()
 export class AuthService {
-  private mailer: Mailer = new Mailer();
-  private pinCode: string = '';
+  private readonly refreshTokens = new Map<RefreshToken, AccessToken>();
+  private readonly activeTokens = new Set<AccessToken>();
+  private readonly tokenMap = new Map<bigint, Set<RefreshToken | AccessToken>>();
+  // private readonly blockedTokens = new Set<AcessToken>();
   constructor(
-    private readonly userService: UserService,
-    private jwtService: JwtService
-  ) {}
-  async login(email: string, password: string): Promise<any> {
-    const user = await this.userService.login(email, password);
-    if (!user || user.isDeleted) {
-      throw new Error('User not found');
+    private readonly logger: ConsoleLogger,
+    private readonly jwt: JwtService,
+    private readonly cqlDb: CqlDbContext
+  ) {
+    this.logger.log('AuthService initialized', 'AuthService');
+  }
+  get model() {
+    return this.cqlDb.model('Users') as ModelInstance<IUserMeta>;
+  }
+  async login(data: ILoginDto) {
+    const { email, password } = data;
+    const user = (await this.model.findOneAsync(
+      { email },
+      { select: ['user_id', 'username', 'credentials'], raw: true, allow_filtering: true }
+    )) as Nullable<IUserAuth>;
+    this.logger.debug(user, 'AuthService');
+    if (!user) {
+      throw new NotFoundException({ error: 'User does not exist' });
     }
-    if (HashingPassword.comparePassword(password, user.password)) {
-      throw new Error('Password is incorrect');
+    const isValid = await compare(password, user.credentials);
+    if (!isValid) {
+      throw new UnauthorizedException({ error: 'Invalid credentials' });
     }
-    const payload = {
-      id: user.id,
-      email: user.email
-    };
+    return this.newTokenPair({
+      userId: user.user_id.toString(),
+      username: user.username
+    });
+  }
+
+  async verify(token: string) {
+    const actualToken = /^Bearer (.+)$/.exec(token)?.[1];
+    if (!actualToken) {
+      throw new UnauthorizedException('Invalid token');
+    }
+    if (!this.activeTokens.has(actualToken)) {
+      throw new UnauthorizedException('Token expired');
+    }
+    const tokenData = (await this.jwt.verifyAsync(actualToken)) as TokenMeta;
+    if (!tokenData) {
+      this.activeTokens.delete(actualToken!);
+      throw new UnauthorizedException('Invalid token');
+    }
+    // This check might be redundant
+    // The token is already "blocked" the moment it's not in the activeTokens map
+    // if (tokenData.blocked) {
+    //   throw new UnauthorizedException('Token expired: Blocked');
+    // }
     return {
-      access_token: await this.jwtService.signAsync(payload)
+      userId: Long.fromString(tokenData.userId),
+      actualToken
     };
   }
 
-  async register(signUpDto: CreateUserDto): Promise<any> {
-    const exist = await this.userService.exist(signUpDto.email);
-    if (exist) {
-      throw new Error('User already exists');
+  async refresh(refreshToken: string) {
+    const actualRToken = /^Bearer (.+)$/.exec(refreshToken)?.[1];
+    if (!actualRToken) {
+      throw new UnauthorizedException('Invalid token');
     }
-    signUpDto.password = HashingPassword.hashPassword(signUpDto.password);
-    const user = await this.userService.create(signUpDto);
-    const payload = {
-      id: user.id,
-      email: user.email
-    };
-    return {
-      access_token: await this.jwtService.signAsync(payload)
-    };
+    if (!(await this.jwt.verifyAsync(actualRToken))) {
+      throw new UnauthorizedException('Invalid token');
+    }
+    if (!this.refreshTokens.has(actualRToken)) {
+      throw new UnauthorizedException('Token expired');
+    }
+    const aToken = this.refreshTokens.get(actualRToken);
+    if (aToken) {
+      this.activeTokens.delete(aToken);
+    }
+    const tokenData = this.jwt.decode(actualRToken) as TokenMeta;
+    this.refreshTokens.delete(actualRToken);
+    const tokens = this.tokenMap.get(BigInt(tokenData.userId));
+    tokens?.delete(actualRToken);
+    tokens?.delete(aToken!);
+
+    return this.newTokenPair(tokenData);
   }
 
-  async checkEmailExist(email: string) {
-    this.mailer.send(email, 'check your email exist', '');
-    const exist = await this.userService.exist(email);
-    if (!exist) {
-      throw new Error('User not found');
+  newTokenPair(data: TokenMeta) {
+    const jwtPayload = {
+      sub: Date.now().toString(2),
+      userId: data.userId,
+      username: data.username
+    };
+    const token = this.jwt.sign(jwtPayload);
+    const refreshToken = this.jwt.sign(jwtPayload, {
+      expiresIn: '7d'
+    });
+    this.activeTokens.add(token);
+    this.refreshTokens.set(refreshToken, token);
+    const userId = BigInt(data.userId);
+    const tokens = this.tokenMap.get(userId);
+    if (tokens) {
+      tokens.add(token);
+      tokens.add(refreshToken);
     } else {
-      return true;
+      this.tokenMap.set(userId, new Set([token, refreshToken]));
     }
+    return {
+      access: token,
+      refresh: refreshToken
+    };
   }
 
-  forgotPassword(email: string) {
-    this.pinCode = pinCodeGen();
-    this.mailer.send(email, 'Reset your password', `Reset password with pin code: ${this.pinCode}`);
-  }
-
-  checkPinCode(pinCode: string) {
-    if (pinCode === this.pinCode) {
-      return true;
+  logout(token: AccessToken | RefreshToken, uid: bigint, allSessions = false) {
+    this.activeTokens.delete(token);
+    this.refreshTokens.delete(token);
+    this.tokenMap.get(uid)?.delete(token);
+    if (allSessions) {
+      const { userId } = this.jwt.decode(token) as TokenMeta;
+      const tokens = this.tokenMap.get(BigInt(userId));
+      if (tokens) {
+        for (const t of tokens) {
+          this.refreshTokens.delete(t);
+          this.activeTokens.delete(t);
+        }
+      }
     }
-    return false;
   }
 }

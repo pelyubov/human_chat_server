@@ -1,80 +1,62 @@
+import { Request, Response } from 'express';
+import { ZodError } from 'zod';
 import {
   Body,
+  ConsoleLogger,
   Controller,
-  Get,
-  HttpCode,
-  HttpException,
-  HttpStatus,
   Post,
-  Request,
-  UseGuards
+  Headers,
+  HttpCode,
+  BadRequestException,
+  Req,
+  Res
 } from '@nestjs/common';
-import { CreateUserDto } from 'src/user/dtos/createUser.dto';
-import { AuthGuard } from './auth.guard';
+import { LoginDto, ILoginDto } from '@Project.Dtos/user/login.dto';
+import { formatError } from '@Project.Utils/helpers';
 import { AuthService } from './auth.service';
-import { Public } from './decorators/public.decorator';
+import { ExceptionStrings } from '@Project.Utils/errors/ExceptionStrings';
 
-@Controller('auth')
+@Controller('api')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private readonly logger: ConsoleLogger,
+    private readonly auth: AuthService
+  ) {
+    this.logger.log('AuthController initialized', 'AuthController');
+  }
 
-  @HttpCode(HttpStatus.OK)
   @Post('login')
-  signIn(@Body() signInDto: Record<string, any>) {
+  @HttpCode(200)
+  async login(@Body() body: ILoginDto, @Res() response: Response) {
     try {
-      return this.authService.login(signInDto.email, signInDto.password);
-    } catch (error) {
-      throw new HttpException(error.message, 409);
-    }
-  }
-
-  @Public()
-  @HttpCode(HttpStatus.OK)
-  @Post('register')
-  async signUp(@Body() signUpDto: CreateUserDto) {
-    try {
-      await this.authService.register(signUpDto);
-    } catch (error) {
-      throw new HttpException(error.message, 409);
-    }
-  }
-
-  @Public()
-  @Post('check-email-exist')
-  checkEmailExist(@Body() email: string): boolean {
-    try {
-      this.authService.checkEmailExist(email);
-      return true;
-    } catch (error) {
-      if (error instanceof EmailNotValid) {
-        throw new HttpException(error.message, 409);
+      const tokens = await this.auth.login(await LoginDto.parseAsync(body));
+      response.cookie('refreshToken', tokens.refresh, {
+        httpOnly: true,
+        path: '/api/tokens'
+      });
+      return response.json({ accessToken: tokens.access });
+    } catch (e) {
+      if (e instanceof ZodError) {
+        throw new BadRequestException({ error: formatError(e) });
       }
-      if (error instanceof EmailNotFound) {
-        throw new HttpException(error.message, 404);
-      }
-      throw new HttpException(error.message, 500);
+      throw e;
     }
   }
 
-  @Public()
-  @Post('forgot-password')
-  forgotPassword(@Body() email: string) {
-    this.checkEmailExist(email);
-    this.authService.forgotPassword(email);
-  }
-
-  @Public()
-  @Post('check-pin-code')
-  checkPinCode(@Body() dto: PinCodeDto) {
-    if (!this.authService.checkPinCode(dto.pinCode)) {
-      throw new HttpException('Pin code is incorrect', 400);
+  @Post('logout')
+  @HttpCode(200)
+  async logout(@Headers('authorization') token: string) {
+    const { userId, actualToken } = await this.auth.verify(token);
+    if (!token) {
+      throw new BadRequestException(ExceptionStrings.TOKEN_REQUIRED);
     }
-    return HttpCode(200);
+    this.auth.logout(actualToken, userId.toBigInt());
+    return { message: 'Logout successful' };
   }
 
-  @UseGuards(AuthGuard)
-  @Get('profile')
-  getProfile(@Request() req) {
-    return req.user;
+  @Post('tokens')
+  @HttpCode(200)
+  async refreshToken(@Req() request: Request) {
+    const token = request.cookies.refreshToken;
   }
 }
