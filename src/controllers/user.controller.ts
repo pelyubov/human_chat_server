@@ -22,6 +22,7 @@ import { ZodError } from 'zod';
 import { formatError } from '@Project.Utils/helpers';
 import { IUpdateUserDto, UpdateUserDto } from '@Project.Dtos/user/update-user.dto';
 import { WsGateway } from '../ws/ws.gateway';
+import { ExceptionStrings } from '@Project.Utils/errors/ExceptionStrings';
 
 // @UseGuards(AuthGuard)
 @Controller('api')
@@ -42,15 +43,17 @@ export class UserController {
     try {
       const result = await SignUpDto.parseAsync(body);
       if (await this.users.existsEmail(result.email)) {
-        throw new BadRequestException({ error: 'Email already exists.' });
+        throw new BadRequestException(ExceptionStrings.EMAIL_EXISTS);
       }
       if (await this.users.existsUsername(result.username)) {
-        throw new BadRequestException({ error: 'Username already exists.' });
+        throw new BadRequestException(ExceptionStrings.USERNAME_EXISTS);
       }
       await this.users.create(result);
       return { message: 'Success' };
     } catch (e) {
-      if (!(e instanceof ZodError)) throw new BadRequestException({ error: e });
+      if (!(e instanceof ZodError)) {
+        throw new BadRequestException({ error: e });
+      }
       throw new BadRequestException({ error: formatError(e) });
     }
   }
@@ -59,7 +62,9 @@ export class UserController {
   async selfInfo(@Headers('authorization') token: string) {
     const { userId } = await this.auth.verify(token);
     const user = await this.users.get(userId);
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
     return user;
   }
 
@@ -94,8 +99,12 @@ export class UserController {
         }
       };
     } catch (e) {
-      if (e instanceof ZodError) throw new BadRequestException({ error: e });
-      if (e instanceof BadRequestException) throw new BadRequestException({ error: e.message });
+      if (e instanceof ZodError) {
+        throw new BadRequestException({ error: e });
+      }
+      if (e instanceof BadRequestException) {
+        throw new BadRequestException({ error: e.message });
+      }
       throw e;
     }
   }
@@ -122,13 +131,17 @@ export class UserController {
   async acceptFriendRequest(@Headers('authorization') token: string, @Param('id') id: string) {
     const responderId = (await this.auth.verify(token)).userId;
     const requesterId = (await this.users.get(Long.fromString(id)))?.user_id;
-    if (!requesterId) throw new NotFoundException('User not found');
+    if (!requesterId) {
+      throw new NotFoundException('User not found');
+    }
     try {
       await this.users.acceptRequest(responderId, requesterId);
       await this.channels.create(`DM`, [requesterId, responderId]);
       return { message: 'Friend request accepted successfully' };
     } catch (e) {
-      if (e instanceof BadRequestException) throw new BadRequestException({ error: e.message });
+      if (e instanceof BadRequestException) {
+        throw new BadRequestException({ error: e.message });
+      }
       throw e;
     }
   }
@@ -140,11 +153,15 @@ export class UserController {
   ) {
     const { userId: senderId } = await this.auth.verify(token);
     const receiverId = await this.users.retrieveUserId(username);
-    if (!receiverId) throw new NotFoundException('User not found');
+    if (!receiverId) {
+      throw new NotFoundException('User not found');
+    }
     try {
       await this.users.sendRequest(senderId, receiverId);
     } catch (e) {
-      if (e instanceof BadRequestException) throw new BadRequestException({ error: e.message });
+      if (e instanceof BadRequestException) {
+        throw new BadRequestException({ error: e.message });
+      }
       throw e;
     }
     return { message: 'Friend request sent successfully.' };
@@ -159,7 +176,9 @@ export class UserController {
     const results = await Promise.all(
       friendRequestIdList.map(async (id) => {
         const user = await this.users.get(id);
-        if (!user) throw new InternalServerErrorException('User not found');
+        if (!user) {
+          throw new InternalServerErrorException('User not found');
+        }
         return user;
       })
     );
@@ -173,7 +192,9 @@ export class UserController {
     const results = await Promise.all(
       friendRequestIdList.map(async (id) => {
         const user = await this.users.get(id);
-        if (!user) throw new InternalServerErrorException('User not found');
+        if (!user) {
+          throw new InternalServerErrorException('User not found');
+        }
         return user;
       })
     );

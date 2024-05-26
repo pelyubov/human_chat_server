@@ -1,6 +1,5 @@
 import { ZodError } from 'zod';
-import { types as DataStaxTypes } from 'cassandra-driver';
-import Long from 'long';
+import { Long } from './types';
 
 /**
  * Throws an error indicating that a function is not implemented.
@@ -56,6 +55,18 @@ export function scrambleStrings(...strings: string[]) {
   const chr = [''].concat(...strings.map((s) => s.split('')));
   for (let _ = 0; _ < chr.length; _++) {
     result += chr.splice(Math.floor(Math.random() * chr.length), 1);
+  }
+  return result;
+}
+
+export function base64Number(number: Long) {
+  const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-';
+  let result = '';
+  let n = Long.fromILong(number);
+  while (n.gt(0)) {
+    const mod = n.mod(64);
+    result = alphabet.charAt(mod.toNumber()) + result;
+    n = n.div(64);
   }
   return result;
 }

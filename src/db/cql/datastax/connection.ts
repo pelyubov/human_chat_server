@@ -126,7 +126,9 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
       rows: [{ silly }]
     } = await client.execute('SELECT silly FROM sayuri.Test WHERE sayiyu = 1310');
     const resultString = `Testing ${silly ? 'passed' : 'failed'}: Got \`${silly}\``;
-    if (!silly) throw new AssertionError({ message: resultString });
+    if (!silly) {
+      throw new AssertionError({ message: resultString });
+    }
     this.logger.log(resultString, 'DataStax.Driver');
     this.logger.log('Read test completed successfully.', 'DataStax.Driver');
   }
@@ -150,7 +152,9 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
         const { mapping } = (await import(path)) as {
           mapping: DataStaxMapping.ModelOptions;
         };
-        if (!Object.keys(mapping).length) throw new Error('Empty model');
+        if (!Object.keys(mapping).length) {
+          throw new Error('Empty model');
+        }
         this.logger.log(`Registering Model(${modelName})`, 'DataStax.Mappings');
         this._mappingDefs.set(modelName, mapping);
       } catch (e) {
@@ -188,7 +192,9 @@ export class DataStaxConnection extends CqlDbConnectionImpl<DataStaxClient> impl
     const model = this.model('Test').mapper;
     const readResult = await model.get({ ok: true });
     const resultString = `Reading ${readResult?.ok ? 'passed' : 'failed'}: Got \`${readResult?.ok}\``;
-    if (!readResult?.ok) throw new AssertionError({ message: resultString });
+    if (!readResult?.ok) {
+      throw new AssertionError({ message: resultString });
+    }
     this.logger.log(resultString, 'DataStax.Mappings');
     const now = Date.now();
     this.logger.log(

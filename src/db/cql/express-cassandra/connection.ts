@@ -78,7 +78,9 @@ export class ExpressCassandraConnection
     this.logger.log('Testing query (findOne from Test) ASSERT (ok = True)', 'ExpressCassandra');
     const test = await client.instance.Test.findOneAsync({ ok: true });
     const testResult = `Testing ${test.ok ? 'passed' : 'failed'}: Got \`${JSON.stringify(test.ok)}\``;
-    if (!test.ok) throw new AssertionError({ message: testResult });
+    if (!test.ok) {
+      throw new AssertionError({ message: testResult });
+    }
     this.logger.log(testResult, 'ExpressCassandra');
   }
 

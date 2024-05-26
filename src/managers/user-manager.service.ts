@@ -22,6 +22,7 @@ import {
   FriendRelationshipStatus,
   UserVertex
 } from '@Project.Database/schemas/graph';
+import { ExceptionStrings } from '@Project.Utils/errors/ExceptionStrings';
 
 @Injectable()
 export class UserManagerService {
@@ -63,6 +64,7 @@ export class UserManagerService {
     );
     if (!result) return null;
     result.user_id = userId;
+    await this.getUserVertex(this.graph.V(), userId);
     this.cache.set(`user:${userId}:meta`, result);
     return result;
   }
@@ -88,14 +90,17 @@ export class UserManagerService {
   }
   async update(userId: UserId, data: IUpdateUserDto) {
     const target = await this.model.findOneAsync({ user_id: userId });
-    if (!target) throw new BadRequestException('User not found');
+    if (!target) {
+      throw new BadRequestException(ExceptionStrings.UNKNOWN_USER);
+    }
     const { email, password, oldPassword, username, displayName, bio } = data;
     if (email || password) {
       await this.updateAuth(target, { email, password, oldPassword });
     } else {
       if (username) {
-        if (await this.existsUsername(username))
-          throw new BadRequestException('Username already exists.');
+        if (await this.existsUsername(username)) {
+          throw new BadRequestException(ExceptionStrings.USERNAME_EXISTS);
+        }
         target.username = username;
       }
       if (displayName) target.display_name = displayName;
@@ -128,23 +133,32 @@ export class UserManagerService {
     const { email, password, oldPassword } = data;
     if (!oldPassword) {
       // User can only update email in this case.
-      if (!email || email === target.email) throw new BadRequestException('No changes detected.');
-      if (await this.existsEmail(email)) throw new BadRequestException('Email already exists.');
-      if (!password) throw new BadRequestException('Password is required when changing email.');
-      if (!(await compare(password, target.credentials)))
-        throw new BadRequestException('Password is incorrect.');
+      if (!email || email === target.email) return;
+      if (await this.existsEmail(email)) {
+        throw new BadRequestException(ExceptionStrings.EMAIL_EXISTS);
+      }
+      if (!password) {
+        throw new BadRequestException(ExceptionStrings.PASSWORD_REQUIRED_CRED_UPDATE);
+      }
+      if (!(await compare(password, target.credentials))) {
+        throw new BadRequestException(ExceptionStrings.PASSWORD_INCORRECT);
+      }
       target.email = email;
     } else {
-      if (!(await compare(oldPassword, target.credentials)))
-        throw new BadRequestException('Password is incorrect.');
-      if (!password)
-        throw new BadRequestException('New password is required when changing password.');
+      if (!(await compare(oldPassword, target.credentials))) {
+        throw new BadRequestException(ExceptionStrings.PASSWORD_INCORRECT);
+      }
+      if (!password) {
+        throw new BadRequestException(ExceptionStrings.PASSWORD_REQUIRED_CRED_UPDATE);
+      }
       target.credentials = await hash(password, 10);
     }
   }
   async delete(userId: UserId) {
     const user = await this.model.findOneAsync({ user_id: userId });
-    if (!user) throw new BadRequestException('User not found');
+    if (!user) {
+      throw new BadRequestException(ExceptionStrings.UNKNOWN_USER);
+    }
     user.email = '';
     user.username = `${userId}-del`;
     user.display_name = `Deleted User ${userId}`;
@@ -189,7 +203,9 @@ export class UserManagerService {
     const cached = await this.cache.get<UserVertex>(`user:${userId}:vertex`);
     if (cached) return cached;
     const result = (await traversal.hasLabel('User').has('userId', userId).next()).value;
-    if (!result) throw new BadRequestException('User not found');
+    if (!result) {
+      throw new BadRequestException(ExceptionStrings.UNKNOWN_USER);
+    }
     this.cache.set(`user:${userId}:vertex`, result);
     return result;
   }
@@ -212,27 +228,27 @@ export class UserManagerService {
     const incomingRelationship = await this.getRelationship(receiverId, senderId);
     this.logger.debug(JSON.stringify(incomingRelationship), 'incomingRelationship');
     switch (incomingRelationship) {
-      case 'BLOCKED':
-        throw new BadRequestException('This user has blocked you.');
-      case 'FRIEND':
-        throw new BadRequestException('You are already friends with this user.');
-      case 'PENDING':
-        throw new BadRequestException('You have already received a friend request from this user.');
+      case FriendRelationshipStatus.BLOCKED:
+        throw new BadRequestException(ExceptionStrings.BLOCKED_FROM);
+      case FriendRelationshipStatus.FRIEND:
+        throw new BadRequestException(ExceptionStrings.REQUEST_ALREADY_FRIENDS);
+      case FriendRelationshipStatus.PENDING:
+        throw new BadRequestException(ExceptionStrings.REQUEST_ALREADY_RECEIVED);
     }
     switch (outgoingRelationship) {
-      case 'BLOCKED':
-        throw new BadRequestException('You blocked this user.');
-      case 'FRIEND':
-        throw new BadRequestException('You are already friends with this user.');
-      case 'PENDING':
-        throw new BadRequestException('You have already sent a friend request to this user.');
+      case FriendRelationshipStatus.BLOCKED:
+        throw new BadRequestException(ExceptionStrings.BLOCKED_TO);
+      case FriendRelationshipStatus.FRIEND:
+        throw new BadRequestException(ExceptionStrings.REQUEST_ALREADY_FRIENDS);
+      case FriendRelationshipStatus.PENDING:
+        throw new BadRequestException(ExceptionStrings.REQUEST_ALREADY_SENT);
     }
 
     await this.graph
       .V(senderId)
       .addE('relationship')
       .to(GremlinStatics.V<UserVertex>(receiverId))
-      .property('relationshipStatus', 'PENDING')
+      .property('relationshipStatus', FriendRelationshipStatus.PENDING)
       .next();
 
     this.ws.broadcast(
@@ -252,31 +268,31 @@ export class UserManagerService {
     const outgoingRelationship = await this.getRelationship(responderVertexId, requesterVertexId);
     const incomingRelationship = await this.getRelationship(requesterVertexId, responderVertexId);
     switch (outgoingRelationship) {
-      case 'BLOCKED':
-        throw new BadRequestException('You blocked this user.');
-      case 'FRIEND':
-        throw new BadRequestException('You are already friends with this user.');
-      case 'PENDING':
-        throw new BadRequestException('You cannot accept a friend request that you sent.');
+      case FriendRelationshipStatus.BLOCKED:
+        throw new BadRequestException(ExceptionStrings.BLOCKED_TO);
+      case FriendRelationshipStatus.FRIEND:
+        throw new BadRequestException(ExceptionStrings.REQUEST_ALREADY_FRIENDS);
+      case FriendRelationshipStatus.PENDING:
+        throw new BadRequestException(ExceptionStrings.REQUEST_ACCEPT_SELF);
     }
     switch (incomingRelationship) {
-      case 'BLOCKED':
-        throw new BadRequestException('This user has blocked you.');
-      case 'FRIEND':
-        throw new BadRequestException('You are already friends with this user.');
-      case 'PENDING':
+      case FriendRelationshipStatus.BLOCKED:
+        throw new BadRequestException(ExceptionStrings.BLOCKED_FROM);
+      case FriendRelationshipStatus.FRIEND:
+        throw new BadRequestException(ExceptionStrings.REQUEST_ALREADY_FRIENDS);
+      case FriendRelationshipStatus.PENDING:
         await Promise.all([
           this.graph
             .V(responderVertexId)
             .addE('relationship')
             .to(GremlinStatics.V<UserVertex>(requesterVertexId))
-            .property('relationshipStatus', 'FRIEND')
+            .property('relationshipStatus', FriendRelationshipStatus.FRIEND)
             .next(),
           this.graph
             .V(requesterVertexId)
             .outE('relationship')
             .where(GremlinStatics.inV<UserVertex>().hasId(responderVertexId))
-            .property('relationshipStatus', 'FRIEND')
+            .property('relationshipStatus', FriendRelationshipStatus.FRIEND)
             .next()
         ]);
 
@@ -292,10 +308,10 @@ export class UserManagerService {
     const { id: receiverVertexId } = await this.getUserVertex(this.graph.V(), receiverUID);
     const outgoingRelationship = await this.getRelationship(senderVertexId, receiverVertexId);
     switch (outgoingRelationship) {
-      case 'BLOCKED':
-      case 'FRIEND':
-        throw new BadRequestException("You don't have a pending friend request to this user.");
-      case 'PENDING':
+      case FriendRelationshipStatus.BLOCKED:
+      case FriendRelationshipStatus.FRIEND:
+        throw new BadRequestException(ExceptionStrings.REQUEST_ALREADY_FRIENDS);
+      case FriendRelationshipStatus.PENDING:
         await this.graph
           .V(senderVertexId)
           .outE('relationship')
@@ -331,8 +347,8 @@ export class UserManagerService {
     const { id: receiverVertexId } = await this.getUserVertex(this.graph.V(), receiverUID);
     const outgoingRelationship = await this.getRelationship(senderVertexId, receiverVertexId);
 
-    if (outgoingRelationship !== 'FRIEND') {
-      throw new BadRequestException('You are not friends with this user.');
+    if (outgoingRelationship !== FriendRelationshipStatus.FRIEND) {
+      throw new BadRequestException(ExceptionStrings.NOT_FRIENDS);
     }
 
     await Promise.all([
@@ -359,26 +375,28 @@ export class UserManagerService {
     const outgoingRelationship = await this.getRelationship(senderVertexId, receiverVertexId);
     const incomingRelationship = await this.getRelationship(receiverVertexId, senderVertexId);
     switch (outgoingRelationship) {
-      case 'BLOCKED':
-        throw new BadRequestException('You have already blocked this user.');
-      case 'FRIEND':
+      case FriendRelationshipStatus.BLOCKED:
+        throw new BadRequestException(ExceptionStrings.BLOCKED_TO);
+      case FriendRelationshipStatus.FRIEND:
         await this.unfriend(senderUID, receiverUID);
         break;
-      case 'PENDING':
+      case FriendRelationshipStatus.PENDING:
         await this.cancelRequest(senderUID, receiverUID);
         break;
     }
-    if (incomingRelationship === 'PENDING') {
+    if (incomingRelationship === FriendRelationshipStatus.PENDING) {
       await this.cancelRequest(receiverUID, senderUID);
     }
     await this.graph
       .V(senderVertexId)
       .addE('relationship')
       .to(GremlinStatics.V<UserVertex>(receiverVertexId))
-      .property('relationshipStatus', 'BLOCKED')
+      .property('relationshipStatus', FriendRelationshipStatus.BLOCKED)
       .next();
 
-    this.ws.broadcast('blocked', { from: senderUID }, [receiverUID.toBigInt()]);
+    this.ws.broadcast(FriendRelationshipStatus.BLOCKED, { from: senderUID }, [
+      receiverUID.toBigInt()
+    ]);
   }
 }
 

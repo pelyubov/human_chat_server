@@ -13,7 +13,7 @@ async function main() {
   app.enableCors({
     origin: '*'
   });
-  app.use(cookieParser())
+  app.use(cookieParser());
   app.use((req: Request, res, next) => {
     console.log(req.headers);
     // console.log(req);

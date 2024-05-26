@@ -91,7 +91,9 @@ export class AuthService {
       throw new UnauthorizedException('Token expired');
     }
     const aToken = this.refreshTokens.get(actualRToken);
-    if (aToken) this.activeTokens.delete(aToken);
+    if (aToken) {
+      this.activeTokens.delete(aToken);
+    }
     const tokenData = this.jwt.decode(actualRToken) as TokenMeta;
     this.refreshTokens.delete(actualRToken);
     const tokens = this.tokenMap.get(BigInt(tokenData.userId));

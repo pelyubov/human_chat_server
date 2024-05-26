@@ -16,6 +16,7 @@ import { UserManagerService } from '@Project.Managers/user-manager.service';
 import { MessageManagerService } from '@Project.Managers/message-manager.service';
 import { Long } from '@Project.Utils/types';
 import { ChanCreationDto, IChanCreationDto } from '@Project.Dtos/channel/create-channel.dto';
+import { ExceptionStrings } from '@Project.Utils/errors/ExceptionStrings';
 
 @Controller('api')
 export class ChannelController {
@@ -33,9 +34,12 @@ export class ChannelController {
   async createChannel(@Headers('authorization') token: string, @Body() data: IChanCreationDto) {
     const { userId } = await this.auth.verify(token);
     const { name: channelName, users: channelUsers } = await ChanCreationDto.parseAsync(data);
+
+    const members = new Set(channelUsers);
+    members.delete(userId.toString());
     const channel = await this.channels.create(
       channelName,
-      [userId, ...channelUsers.map((u) => Long.fromString(u))],
+      [...channelUsers].map((u) => Long.fromString(u)),
       userId
     );
 
@@ -71,12 +75,17 @@ export class ChannelController {
   ) {
     const { userId } = await this.auth.verify(token);
     const user = await this.users.get(userId);
-    if (!user) throw new BadRequestException('User does not exist.');
+    if (!user) {
+      throw new BadRequestException(ExceptionStrings.UNKNOWN_USER);
+    }
     const chanId = Long.fromBigInt(channelId);
     const channel = await this.channels.get(chanId);
-    if (!channel) throw new BadRequestException('Channel does not exist.');
-    if (!channel.users.includes(userId.toBigInt()))
-      throw new BadRequestException('User is not in channel.');
+    if (!channel) {
+      throw new BadRequestException(ExceptionStrings.UNKNOWN_CHANNEL);
+    }
+    if (!channel.users.includes(userId.toBigInt())) {
+      throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
+    }
     return {
       id: channelId.toString(),
       name: channel.name,
@@ -84,6 +93,7 @@ export class ChannelController {
     };
   }
 
+  @Get('channels/:channelId/messages')
   async fetchMessages(
     @Headers('authorization') token: string,
     @Param('channelId') channelId: string,
@@ -111,7 +121,9 @@ export class ChannelController {
   ) {
     const { userId } = await this.auth.verify(token);
     const isOwner = await this.channels.isOwner(userId, Long.fromBigInt(channelId));
-    if (!isOwner) throw new BadRequestException('User is not channel owner');
+    if (!isOwner) {
+      throw new BadRequestException(ExceptionStrings.NOT_OWNER);
+    }
     const updated = await this.channels.update(userId, data);
     return {
       message: 'Successfully edited channel.',
@@ -122,18 +134,37 @@ export class ChannelController {
     };
   }
 
-  @Post('channels/:channelId/join')
-  async joinChannel(
+  @Post('channels/:channelId/invite')
+  async createInvite(
     @Headers('authorization') token: string,
-    @Param('channelId') channelId: bigint
+    @Param('channelId') channelId: bigint,
+    @Body() data: { lifetime?: number }
   ) {
     const { userId } = await this.auth.verify(token);
-    // await this.channels.join(userId, channelId);
-    //    verify if user is not already in channel
-    //    verify if user is not blocked
-    //    join channel
-    //    return shape: { message: "Channel joined successfully" }
-    await this.channels.join(userId, Long.fromBigInt(channelId));
+    const isOwner = await this.channels.isOwner(userId, Long.fromBigInt(channelId));
+    if (!isOwner) {
+      throw new BadRequestException(ExceptionStrings.NOT_OWNER);
+    }
+    const inviteCode = await this.channels.createInvite(
+      userId,
+      Long.fromBigInt(channelId),
+      data.lifetime
+    );
+    return {
+      message: 'Invite created successfully',
+      data: {
+        inviteCode
+      }
+    };
+  }
+
+  @Post('join/:inviteCode')
+  async joinChannel(
+    @Headers('authorization') token: string,
+    @Param('inviteCode') inviteCode: string
+  ) {
+    const { userId } = await this.auth.verify(token);
+    await this.channels.useInvite(userId, inviteCode);
     return { message: 'Channel joined successfully' };
   }
 
@@ -143,10 +174,6 @@ export class ChannelController {
     @Param('channelId') channelId: bigint
   ) {
     const { userId } = await this.auth.verify(token);
-    // await this.channels.leave(userId, channelId);
-    //    verify if user is in channel
-    //    leave channel
-    //    return shape: { message: "Channel left successfully" }
     await this.channels.leave(userId, Long.fromBigInt(channelId));
     return { message: 'Channel left successfully' };
   }
@@ -159,7 +186,9 @@ export class ChannelController {
     const { userId } = await this.auth.verify(token);
     const chanId = Long.fromBigInt(channelId);
     const isOwner = await this.channels.isOwner(userId, chanId);
-    if (!isOwner) throw new BadRequestException('User is not channel owner');
+    if (!isOwner) {
+      throw new BadRequestException(ExceptionStrings.NOT_OWNER);
+    }
     await this.channels.delete(chanId);
     return { message: 'Channel deleted successfully' };
   }

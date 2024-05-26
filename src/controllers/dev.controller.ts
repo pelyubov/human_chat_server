@@ -26,7 +26,9 @@ export class DevController {
   @SetMetadata('skipAuth', true)
   @Get('/dev/status')
   async status() {
-    if (!this.config.isDev) throw new NotFoundException();
+    if (!this.config.isDev) {
+      throw new NotFoundException();
+    }
     return await this.jsonifyServices();
   }
 
@@ -34,7 +36,9 @@ export class DevController {
   @Post('/dev/reload-db-clients')
   async reloadDb() {
     // TODO: Selectively reload databases
-    if (!this.config.isDev) throw new NotFoundException();
+    if (!this.config.isDev) {
+      throw new NotFoundException();
+    }
     const errors: string[][] = [];
     try {
       await this.cqlDbContext.restartConnection(true);

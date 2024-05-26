@@ -5,7 +5,7 @@ import { AuthModule } from '../auth/auth.module';
 import { ManagersModule } from '@Project.Managers/managers.module';
 @Global()
 @Module({
-  imports: [CommonServicesModule, AuthModule, (forwardRef(() => ManagersModule))],
+  imports: [CommonServicesModule, AuthModule, forwardRef(() => ManagersModule)],
   providers: [WsGateway],
   exports: [WsGateway]
 })

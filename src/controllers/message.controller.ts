@@ -15,6 +15,7 @@ import {
   Post
 } from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
+import { ExceptionStrings } from '@Project.Utils/errors/ExceptionStrings';
 
 @Controller('api/channels')
 export class MessageController {
@@ -36,12 +37,17 @@ export class MessageController {
   ) {
     const { userId } = await this.auth.verify(token);
     const user = await this.users.get(userId);
-    if (!user) throw new BadRequestException('User does not exist.');
+    if (!user) {
+      throw new BadRequestException(ExceptionStrings.UNKNOWN_USER);
+    }
     const chanId = Long.fromBigInt(channelId);
     const channel = await this.channels.get(chanId);
-    if (!channel) throw new BadRequestException('Channel does not exist.');
-    if (!channel.users.includes(userId.toBigInt()))
-      throw new BadRequestException('User is not in channel.');
+    if (!channel) {
+      throw new BadRequestException(ExceptionStrings.UNKNOWN_CHANNEL);
+    }
+    if (!channel.users.includes(userId.toBigInt())) {
+      throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
+    }
     const { content, replyTo } = await IncomingMessageDto.parseAsync(data);
     const message = await this.messages.create(
       chanId,
@@ -63,9 +69,12 @@ export class MessageController {
     const { userId } = await this.auth.verify(token);
     const { content } = await IncomingMessageDto.parseAsync(data);
     const channel = await this.channels.get(Long.fromBigInt(channelId));
-    if (!channel) throw new BadRequestException('Channel does not exist.');
-    if (!channel.users.includes(userId.toBigInt()))
-      throw new BadRequestException('User is not in channel.');
+    if (!channel) {
+      throw new BadRequestException(ExceptionStrings.UNKNOWN_CHANNEL);
+    }
+    if (!channel.users.includes(userId.toBigInt())) {
+      throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
+    }
     return await this.messages.edit(userId, Long.fromBigInt(messageId), { content });
   }
 
@@ -77,9 +86,12 @@ export class MessageController {
   ) {
     const { userId } = await this.auth.verify(token);
     const channel = await this.channels.get(Long.fromBigInt(channelId));
-    if (!channel) throw new BadRequestException('Channel does not exist.');
-    if (!channel.users.includes(userId.toBigInt()))
-      throw new BadRequestException('User is not in channel.');
+    if (!channel) {
+      throw new BadRequestException(ExceptionStrings.UNKNOWN_CHANNEL);
+    }
+    if (!channel.users.includes(userId.toBigInt())) {
+      throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
+    }
     await this.messages.delete(userId, Long.fromBigInt(messageId));
   }
 }

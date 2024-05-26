@@ -14,6 +14,7 @@ import {
 import { LoginDto, ILoginDto } from '@Project.Dtos/user/login.dto';
 import { formatError } from '@Project.Utils/helpers';
 import { AuthService } from './auth.service';
+import { ExceptionStrings } from '@Project.Utils/errors/ExceptionStrings';
 
 @Controller('api')
 export class AuthController {
@@ -35,7 +36,9 @@ export class AuthController {
       });
       return response.json({ accessToken: tokens.access });
     } catch (e) {
-      if (e instanceof ZodError) throw new BadRequestException({ error: formatError(e) });
+      if (e instanceof ZodError) {
+        throw new BadRequestException({ error: formatError(e) });
+      }
       throw e;
     }
   }
@@ -44,7 +47,9 @@ export class AuthController {
   @HttpCode(200)
   async logout(@Headers('authorization') token: string) {
     const { userId, actualToken } = await this.auth.verify(token);
-    if (!token) throw new BadRequestException({ error: 'Token is required' });
+    if (!token) {
+      throw new BadRequestException(ExceptionStrings.TOKEN_REQUIRED);
+    }
     this.auth.logout(actualToken, userId.toBigInt());
     return { message: 'Logout successful' };
   }
