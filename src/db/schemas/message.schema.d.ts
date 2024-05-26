@@ -1,10 +1,10 @@
 import { MessageId, UserId, Nullable, ChannelId } from '@Project.Utils/types';
 
-export interface IMessage {
-  id: MessageId;
-  author: UserId;
+export interface IMessageMeta {
+  message_id: MessageId;
+  author_id: UserId;
+  channel_id: ChannelId;
   reply_to: Nullable<MessageId>;
-  channel: ChannelId;
   content: string;
   last_edit: Nullable<number>;
 }

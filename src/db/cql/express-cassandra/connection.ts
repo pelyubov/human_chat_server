@@ -83,7 +83,7 @@ export class ExpressCassandraConnection
   }
 
   async close() {
-    return await this.expressCassandra.closeAsync();
+    return await this.expressCassandra?.closeAsync();
   }
 
   async reconnect(force = false) {

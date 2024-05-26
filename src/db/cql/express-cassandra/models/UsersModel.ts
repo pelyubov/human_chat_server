@@ -1,9 +1,8 @@
-import { IUser } from '@Project.Database/schemas/user.schema';
+import type { IUserMeta } from '@Project.Database/schemas/user.schema';
 import { SchemaDefinition } from '../schema';
-import { Long } from '@Project.Utils/types';
 
-const model: SchemaDefinition<IUser> = {
-  table_name: 'hc_users',
+const model: SchemaDefinition<IUserMeta> = {
+  table_name: 'users',
   fields: {
     user_id: 'bigint',
     email: 'text',
@@ -12,7 +11,7 @@ const model: SchemaDefinition<IUser> = {
     username: 'text',
     bio: 'text'
   },
-  key: [['user_id'], 'email', 'username']
+  key: ['user_id']
 };
 
 export default model;

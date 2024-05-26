@@ -118,22 +118,27 @@ export type TokenQuery<T, K extends string> = {
     | undefined;
 };
 
-export type SingleQueryObject<T, TK extends string = ''> =
+export type SingleQueryObject<T /*, TK extends string = '' */> =
   // ! URGENT: `TokenQuery<T>` overrides the `BuiltinQueryOps` type
   // !          and causes the properties of `BuiltinQueryOps` to be
   // !          lost. This is due to the `TokenQuery` wider index signature (`string`).
   // !
   // ! Though, we can enforce a narrower constraint by casting the types manually.
   // ! This is a temporary solution until a better solution is found.
-  TokenQuery<T, TK> &
-    BuiltinQueryOps<T> & {
-      [K in StringKeys<T>]?:
-        | T[K]
-        | { [QueryOps.IN]?: T[K][] }
-        | { [QueryOps.LIKE]?: string }
-        | { [Op in CompareOps]?: T[K] };
-    };
+  // TokenQuery<T, TK> &
+  BuiltinQueryOps<T> & {
+    [K in StringKeys<T>]?:
+      | T[K]
+      | { [QueryOps.IN]?: T[K][] }
+      | { [QueryOps.LIKE]?: string }
+      | { [Op in CompareOps]?: T[K] }
+      | {
+          [QueryOps.TOKEN]?: {
+            [Op in CompareOps]?: T[K];
+          };
+        };
+  };
 
-export type QueryObject<T, TK extends string = ''> = SingleQueryObject<T, TK> & {
+export type QueryObject<T /*, TK extends string = '' */> = SingleQueryObject<T /*, TK */> & {
   [Op in LimitOps]?: number;
 };

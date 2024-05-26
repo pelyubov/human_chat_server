@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
+import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
 
@@ -12,6 +13,7 @@ async function main() {
   app.enableCors({
     origin: '*'
   });
+  app.use(cookieParser())
   app.use((req: Request, res, next) => {
     console.log(req.headers);
     // console.log(req);

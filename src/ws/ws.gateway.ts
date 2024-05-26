@@ -1,4 +1,4 @@
-import { ConsoleLogger } from '@nestjs/common';
+import { ConsoleLogger, Inject, forwardRef } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -11,17 +11,14 @@ import {
 import { WebSocket, Server as WsServer } from 'ws';
 import { IncomingMessage } from 'http';
 import { AuthService } from '../auth/auth.service';
-import { ChannelId, UserId } from '@Project.Utils/types';
-import { UserManagerService } from '@Project.Managers/user-manager.service';
-import { IUserMeta } from '@Project.Database/schemas/user.schema';
-import { ChannelManagerService } from '@Project.Managers/channel-manager.service';
-import { IMessage } from '@Project.Database/schemas/message.schema';
 import { UUID, randomUUID } from 'crypto';
-import { IIncomingMessageDto } from '@Project.Dtos/message.dto';
+import { ChannelManagerService } from '@Project.Managers/channel-manager.service';
+import { Long } from '@Project.Utils/types';
 
 interface IUserSession extends WebSocket {
   clientId: UUID;
-  userId: UserId;
+  userId: bigint;
+  currentChannel?: bigint;
 }
 
 // @UseGuards(AuthGuard)
@@ -29,11 +26,11 @@ interface IUserSession extends WebSocket {
 export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() private readonly server: WsServer;
 
-  private readonly clients = new Map<UserId, Map<UUID, WebSocket>>();
+  private readonly clients = new Map<bigint, Map<UUID, IUserSession>>();
   constructor(
-    private readonly logger: ConsoleLogger,
-    private readonly users: UserManagerService,
+    @Inject(forwardRef(() => ChannelManagerService))
     private readonly channels: ChannelManagerService,
+    private readonly logger: ConsoleLogger,
     private readonly auth: AuthService
   ) {
     this.logger.log('WsGateway initialized', 'WsGateway');
@@ -49,7 +46,7 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
     try {
-      const userId = await this.auth.verify(token);
+      const userId = (await this.auth.verify(token)).userId.toBigInt();
       const socketId = randomUUID();
       client.userId = userId;
       client.clientId = socketId;
@@ -69,63 +66,44 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleDisconnect(client: IUserSession) {
     const { userId, clientId } = client;
+    if (!this.clients.has(userId)) {
+      return;
+    }
     this.clients.get(userId)!.delete(clientId);
     this.logger.log(`Client(${clientId}) [User(${userId})] has disconnected.`, 'WsGateway');
   }
 
-  @SubscribeMessage('message')
-  handleMessage(@MessageBody() message: string, @ConnectedSocket() client: WebSocket & IUserMeta) {
-    const userId = client.user_id.toNumber();
-    this.logger.log(
-      `User ${client.display_name} (${client.username}, ${userId}): "${message}"`,
-      'WsGateway'
+  broadcast(event: string, data: any, users: Iterable<bigint>, exclude?: Set<UUID>) {
+    for (const userId of users) {
+      if (!this.clients.has(userId)) continue;
+      for (const client of this.clients.get(userId)!.values()) {
+        if (exclude?.has(client.clientId)) continue;
+        client.send(
+          JSON.stringify({ event, data }, (_, value) =>
+            typeof value === 'bigint' ? value.toString() : value
+          )
+        );
+      }
+    }
+  }
+
+  @SubscribeMessage('typing')
+  async onTyping(
+    @ConnectedSocket() client: IUserSession,
+    @MessageBody('channelId') channelId: string
+  ) {
+    this.channels.broadcastEvent('typing', { userId: client.userId }, Long.fromString(channelId));
+  }
+
+  @SubscribeMessage('typingStop')
+  async onTypingStop(
+    @ConnectedSocket() client: IUserSession,
+    @MessageBody('channelId') channelId: string
+  ) {
+    this.channels.broadcastEvent(
+      'typingStop',
+      { userId: client.userId },
+      Long.fromString(channelId)
     );
-    const data = {
-      event: 'message',
-      data: {
-        userId,
-        author: `${client.display_name} (@${client.username})`,
-        message
-      }
-    };
-    this.server.clients.forEach((c) => {
-      if (c.readyState === WebSocket.OPEN) {
-        // c.send(JSON.stringify(data));
-        c.send(`${data.data.author}: ${data.data.message}`);
-      }
-    });
-  }
-
-  @SubscribeMessage('getChannels')
-  getChannels(@ConnectedSocket() client: WebSocket & IUserMeta) {
-    // const userId = client.user_id.toNumber();
-    // const channels = this.channels.getChannelsForUser(userId);
-    // const data = {
-    //   event: 'getChannels',
-    //   data: channels
-    // };
-    client.send(JSON.stringify({}));
-  }
-
-  sendMessage(channelId: ChannelId, user: IUserSession, message: IIncomingMessageDto) {
-    const { content, replyTo } = message;
-    const data = {
-      event: 'message',
-      data: {
-        userId: user.userId.toBigInt(),
-        channelId: channelId.toBigInt(),
-        content: message.content
-      }
-    };
-  }
-
-  authChallenge(client: WebSocket) {
-    // client.send('auth');
-    // send a challenge to the client
-    // client sends back ACK with token
-    // server verifies token
-    // server can either accept or reject the connection
-    // if accepted, server sends channel metadata
-    // if rejected, server sends a message and closes the connection
   }
 }

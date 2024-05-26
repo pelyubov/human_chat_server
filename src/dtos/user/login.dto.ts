@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { passwordValidator } from '../validators';
 
 export const LoginDto = z
   .object({
@@ -9,13 +10,7 @@ export const LoginDto = z
       })
       .email('Invalid email')
       .trim(),
-    password: z
-      .string({
-        required_error: 'Password is required',
-        invalid_type_error: 'Password must be a string'
-      })
-      .min(1, 'Password is required')
-      .trim()
+    password: passwordValidator
   })
   .required();
 

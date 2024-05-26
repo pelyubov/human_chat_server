@@ -1,4 +1,4 @@
-import { ITest } from '@Project.Database/schemas/test.schema';
+import type { ITest } from '@Project.Database/schemas/test.schema';
 import { SchemaDefinition } from '../schema';
 
 const model: SchemaDefinition<ITest> = {

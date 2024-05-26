@@ -1,11 +1,13 @@
 import type { ITest } from './test.schema';
-import type { IMessage } from './message.schema';
-import { IUser } from './user.schema';
+import type { IMessageMeta } from './message.schema';
+import { IUserMeta } from './user.schema';
+import { IChanMeta } from './channel.schema';
 
 export type AllSchemas = {
   Test: ITest;
-  Users: IUser;
-  Messages: IMessage;
+  Users: IUserMeta;
+  Messages: IMessageMeta;
+  Channels: IChanMeta;
 };
 
 export type TableName = keyof AllSchemas;

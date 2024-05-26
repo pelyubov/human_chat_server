@@ -2,11 +2,9 @@ import { ConfigService } from '@Project.Services/config.service';
 import { Jsonable } from '@Project.Utils/types';
 import { ConsoleLogger } from '@nestjs/common';
 import { AssertionError } from 'assert';
-import { driver, process as gremlinProcess } from 'gremlin';
-
-export type GraphTraversalSource =
-  gremlinProcess.GraphTraversalSource<gremlinProcess.GraphTraversal>;
-const traversal = gremlinProcess.AnonymousTraversalSource.traversal;
+import { driver } from 'gremlin';
+import { AnonymousTraversalSource, GraphSON3ReaderEx } from './helpers';
+import { GraphTraversalSource } from './types';
 
 export class GremlinConnection implements Jsonable {
   static instance: GremlinConnection;
@@ -24,6 +22,7 @@ export class GremlinConnection implements Jsonable {
     if (GremlinConnection.instance) {
       return GremlinConnection.instance;
     }
+
     this.init();
     GremlinConnection.instance = this;
   }
@@ -52,12 +51,17 @@ export class GremlinConnection implements Jsonable {
       const url = `ws://${host}:${port}${endpoint}`;
       this.logger.log(`url: ${url}`, 'Gremlin.Driver.Parameters');
 
-      const client = new driver.DriverRemoteConnection(url);
+      const remoteConnection = new driver.DriverRemoteConnection(url, {
+        reader: new GraphSON3ReaderEx()
+      });
+
       this.logger.log(`Connecting...`, 'Gremlin.Driver');
-      await client.open();
-      const g = traversal().withRemote(client);
+      await remoteConnection.open();
+      const g = AnonymousTraversalSource.traversal().withRemote(
+        remoteConnection
+      ) as GraphTraversalSource;
       await this.test(g);
-      this._client = client;
+      this._client = remoteConnection;
       this._g = g;
       this.logger.log('GremlinDriver initialization completed successfully.', 'Gremlin.Driver');
     } catch (e) {
@@ -89,11 +93,13 @@ export class GremlinConnection implements Jsonable {
       'Testing query (g.V() hasLabel("test") property(ok)) ASSERT (value = True)',
       'Gremlin.Driver'
     );
+    const result = await g.V().hasLabel('test').next();
     const {
       properties: {
         ok: [{ value }]
       }
-    } = (await g.V().hasLabel('test').next()).value;
+    } = result.value;
+
     const resultString = `Testing ${value ? 'passed' : 'failed'}: Got \`${value}\``;
     if (!value) {
       throw new AssertionError({ message: resultString });

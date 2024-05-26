@@ -1,9 +1,14 @@
-typedef Snowflake bigint(64) struct { bit none, u41 time, u10 worker, u12 increment }
+typedef Snowflake bigint(64) struct {
+  u1  none,
+  u41 time,
+  u10 worker,
+  u12 increment
+}
 
-table Auth {
+table User {
   user_id       Snowflake PRIMARY KEY
-  email         string    CLUSTER KEY
-  username      string    CLUSTER KEY
+  email         string
+  username      string
   credentials   string                  # chuỗi mã hóa
   display_name  string
   bio           string
@@ -28,28 +33,27 @@ table Channels {
   name          string
 }
 
-enum FriendRelationStatus {
+enum FriendRelationshipStatus {
   FRIEND
   PENDING
   BLOCKED
 }
 
-graph.edge dual FriendRelation {
-  status        FriendRelationStatus
+graph.edge dual relationship {
+  status        FriendRelationshipStatus
 }
 
-graph.edge dual UserGroupRelation {
-  role          string
-  joinedAt      DateTime
+graph.edge channelMember {
+  owner?        bool
 }
 
-graph.vert Group {
+graph.vert Channel {
   id            Snowflake
-  edge          GroupRelation -> User
+  edge          channelMember <- User
 }
 
 graph.vert User {
   id		        Snowflake
-  edge          GroupRelation -> Group
-  edge          FriendRelation -> User
+  edge?         channelMember -> Group
+  edge?         relationship -> User
 }

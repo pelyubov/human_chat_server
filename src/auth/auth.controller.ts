@@ -1,15 +1,17 @@
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import {
   Body,
   ConsoleLogger,
   Controller,
   Post,
+  Headers,
   HttpCode,
   BadRequestException,
-  Req
+  Req,
+  Res
 } from '@nestjs/common';
-import { LoginDto, ILoginDto } from '@Project.Dtos/login.dto';
+import { LoginDto, ILoginDto } from '@Project.Dtos/user/login.dto';
 import { formatError } from '@Project.Utils/helpers';
 import { AuthService } from './auth.service';
 
@@ -24,9 +26,14 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
-  async login(@Body() body: ILoginDto) {
+  async login(@Body() body: ILoginDto, @Res() response: Response) {
     try {
-      return this.auth.login(await LoginDto.parseAsync(body));
+      const tokens = await this.auth.login(await LoginDto.parseAsync(body));
+      response.cookie('refreshToken', tokens.refresh, {
+        httpOnly: true,
+        path: '/api/tokens'
+      });
+      return response.json({ accessToken: tokens.access });
     } catch (e) {
       if (e instanceof ZodError) throw new BadRequestException({ error: formatError(e) });
       throw e;
@@ -35,10 +42,16 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(200)
-  async logout(@Req() request: Request) {
-    const token = request.headers.authorization?.split(' ')[1];
+  async logout(@Headers('authorization') token: string) {
+    const { userId, actualToken } = await this.auth.verify(token);
     if (!token) throw new BadRequestException({ error: 'Token is required' });
-    await this.auth.logout(token);
+    this.auth.logout(actualToken, userId.toBigInt());
     return { message: 'Logout successful' };
+  }
+
+  @Post('tokens')
+  @HttpCode(200)
+  async refreshToken(@Req() request: Request) {
+    const token = request.cookies.refreshToken;
   }
 }

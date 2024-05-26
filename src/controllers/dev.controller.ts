@@ -1,5 +1,6 @@
 import { CqlDbContext } from '@Project.Database/cql.db.service';
 import { GremlinDbContext } from '@Project.Database/gremlin.db.service';
+import { UserManagerService } from '@Project.Managers/user-manager.service';
 import { ConfigService } from '@Project.Services/config.service';
 import {
   ConsoleLogger,
@@ -16,6 +17,7 @@ export class DevController {
   constructor(
     private readonly cqlDbContext: CqlDbContext,
     private readonly gremlinDbContext: GremlinDbContext,
+    private readonly users: UserManagerService,
     private readonly config: ConfigService,
     private readonly logger: ConsoleLogger
   ) {
@@ -56,7 +58,7 @@ export class DevController {
     };
   }
 
-  async jsonifyServices() {
+  private async jsonifyServices() {
     return {
       config: this.config.toJSON(),
       cqlDbContext: await this.cqlDbContext.toJSON(),
