@@ -202,7 +202,7 @@ export class ChannelManagerService {
     this.channelModel.deleteAsync({ chan_id: channelId });
     // ? The moral question of whether to also delete the messages...
     this.cache.del(`chan:${channelId}`);
-    this.ws.broadcast('channelLeave', { channelId }, users);
+    this.ws.broadcast('channelLeft', { channelId }, users);
   }
 
   async update(channelId: ChannelId, data: Partial<Omit<IChanMeta, 'chan_id'>>) {
@@ -256,7 +256,7 @@ export class ChannelManagerService {
       .iterate();
 
     this.ws.broadcast(
-      'channelLeave',
+      'channelLeft',
       {
         channelId,
         userId
