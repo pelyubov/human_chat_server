@@ -120,14 +120,7 @@ export class MessageManagerService {
     }
     await message.deleteAsync({ message_id: messageId });
     this.cache.del(`message:${messageId}`);
-    this.channels.broadcastEvent(
-      'messageDeleted',
-      {
-        messageId,
-        channelId: message.channel_id
-      },
-      message.channel_id
-    );
+    this.channels.broadcastEvent('messageDeleted', { messageId }, message.channel_id);
     return { message: 'Message deleted successfully' };
   }
 }
