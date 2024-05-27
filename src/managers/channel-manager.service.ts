@@ -5,6 +5,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   forwardRef
 } from '@nestjs/common';
 import { Cache } from 'cache-manager';
@@ -63,7 +64,7 @@ export class ChannelManagerService {
   async getChannelVertex(source: GraphTraversal<any, ChannelVertex>, channelId: ChannelId) {
     const result = (await source.hasLabel('Channel').has('channelId', channelId).next()).value;
     if (!result) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_CHANNEL);
+      throw new NotFoundException(ExceptionStrings.UNKNOWN_CHANNEL);
     }
     return result;
   }
@@ -99,7 +100,7 @@ export class ChannelManagerService {
       users.map(async (uid) => {
         const userVertex = await this.users.getUserVertex(this.graph.V(), uid);
         if (!userVertex) {
-          throw new BadRequestException(ExceptionStrings.UNKNOWN_USER);
+          throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
         }
         return userVertex.id;
       })
@@ -162,11 +163,11 @@ export class ChannelManagerService {
     const code = base64Number(inviteId);
     const channel = await this.get(channelId);
     if (!channel) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_CHANNEL);
+      throw new NotFoundException(ExceptionStrings.UNKNOWN_CHANNEL);
     }
     const user = await this.users.get(userId);
     if (!user) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_USER);
+      throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
     }
     if (!channel.users.includes(userId.toBigInt())) {
       throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
@@ -185,7 +186,7 @@ export class ChannelManagerService {
   async useInvite(userId: UserId, code: string) {
     const invite = await this.inviteModel.findOneAsync({ code });
     if (!invite) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_INVITE);
+      throw new NotFoundException(ExceptionStrings.UNKNOWN_INVITE);
     }
     await this.join(userId, invite.chan_id);
   }
@@ -193,7 +194,7 @@ export class ChannelManagerService {
   async delete(channelId: ChannelId) {
     const channel = await this.channelModel.findOneAsync({ chan_id: channelId });
     if (!channel) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_CHANNEL);
+      throw new NotFoundException(ExceptionStrings.UNKNOWN_CHANNEL);
     }
     const channelVertex = await this.getChannelVertex(this.graph.V(), channelId);
     const users = await this.getChannelMembers(channelId);
@@ -207,7 +208,7 @@ export class ChannelManagerService {
   async update(channelId: ChannelId, data: Partial<Omit<IChanMeta, 'chan_id'>>) {
     const chan = await this.channelModel.findOneAsync({ chan_id: channelId });
     if (!chan) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_CHANNEL);
+      throw new NotFoundException(ExceptionStrings.UNKNOWN_CHANNEL);
     }
     if (data.name) {
       chan!.name = data.name;
@@ -220,7 +221,7 @@ export class ChannelManagerService {
   async join(userId: UserId, channelId: ChannelId) {
     const channel = await this.get(channelId);
     if (!channel) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_CHANNEL);
+      throw new NotFoundException(ExceptionStrings.UNKNOWN_CHANNEL);
     }
     if (channel.users.includes(userId.toBigInt())) {
       throw new BadRequestException(ExceptionStrings.ALREADY_MEMBER);
@@ -262,7 +263,7 @@ export class ChannelManagerService {
   async getChannelMembers(channelId: ChannelId): Promise<Set<bigint>> {
     const channel = await this.get(channelId);
     if (!channel) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_CHANNEL);
+      throw new NotFoundException(ExceptionStrings.UNKNOWN_CHANNEL);
     }
     return new Set(channel.users);
   }

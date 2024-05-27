@@ -7,6 +7,7 @@ import {
   Delete,
   Get,
   Headers,
+  NotFoundException,
   Param,
   Patch,
   Post
@@ -17,6 +18,7 @@ import { MessageManagerService } from '@Project.Managers/message-manager.service
 import { Long } from '@Project.Utils/types';
 import { ChanCreationDto, IChanCreationDto } from '@Project.Dtos/channel/create-channel.dto';
 import { ExceptionStrings } from '@Project.Utils/errors/ExceptionStrings';
+import { controllerErrorHandler } from '@Project.Utils/error-handler';
 
 @Controller('api')
 export class ChannelController {
@@ -32,40 +34,48 @@ export class ChannelController {
 
   @Post('channels/create')
   async createChannel(@Headers('authorization') token: string, @Body() data: IChanCreationDto) {
-    const { userId } = await this.auth.verify(token);
-    const { name: channelName, users: channelUsers } = await ChanCreationDto.parseAsync(data);
+    try {
+      const { userId } = await this.auth.verify(token);
+      const { name: channelName, users: channelUsers } = await ChanCreationDto.parseAsync(data);
 
-    const members = new Set(channelUsers);
-    members.delete(userId.toString());
-    const channel = await this.channels.create(
-      channelName,
-      [...channelUsers].map((u) => Long.fromString(u)),
-      userId
-    );
+      const members = new Set(channelUsers);
+      members.delete(userId.toString());
+      const channel = await this.channels.create(
+        channelName,
+        [...channelUsers].map((u) => Long.fromString(u)),
+        userId
+      );
 
-    return {
-      message: 'Channel created successfully',
-      data: {
-        channelId: channel.chan_id
-      }
-    };
+      return {
+        message: 'Channel created successfully',
+        data: {
+          channelId: channel.chan_id
+        }
+      };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'ChannelController');
+    }
   }
 
   // It's quite possible that channel metadata is emitted via the WebSocket connection.
   @Get('channels')
   async getChannels(@Headers('authorization') token: string) {
-    const { userId } = await this.auth.verify(token);
-    const channelsId = await this.users.fetchChannelIds(userId);
-    const channelMetas = await Promise.all(
-      channelsId.map(async (channelId) => {
-        const channel = await this.channels.get(channelId);
-        return {
-          id: channelId.toString(),
-          name: channel?.name
-        };
-      })
-    );
-    return { channels: channelMetas };
+    try {
+      const { userId } = await this.auth.verify(token);
+      const channelsId = await this.users.fetchChannelIds(userId);
+      const channelMetas = await Promise.all(
+        channelsId.map(async (channelId) => {
+          const channel = await this.channels.get(channelId);
+          return {
+            id: channelId.toString(),
+            name: channel?.name
+          };
+        })
+      );
+      return { channels: channelMetas };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'ChannelController');
+    }
   }
 
   @Get('channels/:channelId')
@@ -73,24 +83,28 @@ export class ChannelController {
     @Headers('authorization') token: string,
     @Param('channelId') channelId: bigint
   ) {
-    const { userId } = await this.auth.verify(token);
-    const user = await this.users.get(userId);
-    if (!user) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_USER);
+    try {
+      const { userId } = await this.auth.verify(token);
+      const user = await this.users.get(userId);
+      if (!user) {
+        throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
+      }
+      const chanId = Long.fromBigInt(channelId);
+      const channel = await this.channels.get(chanId);
+      if (!channel) {
+        throw new NotFoundException(ExceptionStrings.UNKNOWN_CHANNEL);
+      }
+      if (!channel.users.includes(userId.toBigInt())) {
+        throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
+      }
+      return {
+        id: channelId.toString(),
+        name: channel.name,
+        users: channel.users.map((u) => u.toString())
+      };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'ChannelController');
     }
-    const chanId = Long.fromBigInt(channelId);
-    const channel = await this.channels.get(chanId);
-    if (!channel) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_CHANNEL);
-    }
-    if (!channel.users.includes(userId.toBigInt())) {
-      throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
-    }
-    return {
-      id: channelId.toString(),
-      name: channel.name,
-      users: channel.users.map((u) => u.toString())
-    };
   }
 
   @Get('channels/:channelId/messages')
@@ -103,35 +117,46 @@ export class ChannelController {
       limit: number;
     }
   ) {
-    await this.auth.verify(token);
-    const { lastOldestGetMessageId, limit } = data;
-    const messages = await this.messages.getMessages(
-      Long.fromString(channelId),
-      limit,
-      Long.fromString(lastOldestGetMessageId)
-    );
-    return { messages: messages };
+    try {
+      await this.auth.verify(token);
+      const { lastOldestGetMessageId, limit } = data;
+      const messages = await this.messages.getMessages(
+        Long.fromString(channelId),
+        limit,
+        Long.fromString(lastOldestGetMessageId)
+      );
+      return { messages: messages };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'ChannelController');
+    }
   }
 
   @Patch('channels/:channelId')
   async editChannel(
     @Headers('authorization') token: string,
     @Param('channelId') channelId: bigint,
-    @Body() data: { name: string; description: string }
+    @Body() data: Omit<IChanCreationDto, 'users'>
   ) {
-    const { userId } = await this.auth.verify(token);
-    const isOwner = await this.channels.isOwner(userId, Long.fromBigInt(channelId));
-    if (!isOwner) {
-      throw new BadRequestException(ExceptionStrings.NOT_OWNER);
-    }
-    const updated = await this.channels.update(userId, data);
-    return {
-      message: 'Successfully edited channel.',
-      data: {
-        channelId: channelId.toString(),
-        name: updated.name
+    try {
+      const { userId } = await this.auth.verify(token);
+      const isOwner = await this.channels.isOwner(userId, Long.fromBigInt(channelId));
+      if (!isOwner) {
+        throw new BadRequestException(ExceptionStrings.NOT_OWNER);
       }
-    };
+      const updated = await this.channels.update(
+        userId,
+        await ChanCreationDto.pick({ name: true }).parseAsync(data)
+      );
+      return {
+        message: 'Successfully edited channel.',
+        data: {
+          channelId: channelId.toString(),
+          name: updated.name
+        }
+      };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'ChannelController');
+    }
   }
 
   @Post('channels/:channelId/invite')
@@ -140,22 +165,26 @@ export class ChannelController {
     @Param('channelId') channelId: bigint,
     @Body() data: { lifetime?: number }
   ) {
-    const { userId } = await this.auth.verify(token);
-    const isOwner = await this.channels.isOwner(userId, Long.fromBigInt(channelId));
-    if (!isOwner) {
-      throw new BadRequestException(ExceptionStrings.NOT_OWNER);
-    }
-    const inviteCode = await this.channels.createInvite(
-      userId,
-      Long.fromBigInt(channelId),
-      data.lifetime
-    );
-    return {
-      message: 'Invite created successfully',
-      data: {
-        inviteCode
+    try {
+      const { userId } = await this.auth.verify(token);
+      const isOwner = await this.channels.isOwner(userId, Long.fromBigInt(channelId));
+      if (!isOwner) {
+        throw new BadRequestException(ExceptionStrings.NOT_OWNER);
       }
-    };
+      const inviteCode = await this.channels.createInvite(
+        userId,
+        Long.fromBigInt(channelId),
+        data.lifetime
+      );
+      return {
+        message: 'Invite created successfully',
+        data: {
+          inviteCode
+        }
+      };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'ChannelController');
+    }
   }
 
   @Post('join/:inviteCode')
@@ -163,9 +192,13 @@ export class ChannelController {
     @Headers('authorization') token: string,
     @Param('inviteCode') inviteCode: string
   ) {
-    const { userId } = await this.auth.verify(token);
-    await this.channels.useInvite(userId, inviteCode);
-    return { message: 'Channel joined successfully' };
+    try {
+      const { userId } = await this.auth.verify(token);
+      await this.channels.useInvite(userId, inviteCode);
+      return { message: 'Channel joined successfully' };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'ChannelController');
+    }
   }
 
   @Delete('channels/:channelId/leave')
@@ -173,9 +206,13 @@ export class ChannelController {
     @Headers('authorization') token: string,
     @Param('channelId') channelId: bigint
   ) {
-    const { userId } = await this.auth.verify(token);
-    await this.channels.leave(userId, Long.fromBigInt(channelId));
-    return { message: 'Channel left successfully' };
+    try {
+      const { userId } = await this.auth.verify(token);
+      await this.channels.leave(userId, Long.fromBigInt(channelId));
+      return { message: 'Channel left successfully' };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'ChannelController');
+    }
   }
 
   @Delete('channels/:channelId')
@@ -183,13 +220,17 @@ export class ChannelController {
     @Headers('authorization') token: string,
     @Param('channelId') channelId: bigint
   ) {
-    const { userId } = await this.auth.verify(token);
-    const chanId = Long.fromBigInt(channelId);
-    const isOwner = await this.channels.isOwner(userId, chanId);
-    if (!isOwner) {
-      throw new BadRequestException(ExceptionStrings.NOT_OWNER);
+    try {
+      const { userId } = await this.auth.verify(token);
+      const chanId = Long.fromBigInt(channelId);
+      const isOwner = await this.channels.isOwner(userId, chanId);
+      if (!isOwner) {
+        throw new BadRequestException(ExceptionStrings.NOT_OWNER);
+      }
+      await this.channels.delete(chanId);
+      return { message: 'Channel deleted successfully' };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'ChannelController');
     }
-    await this.channels.delete(chanId);
-    return { message: 'Channel deleted successfully' };
   }
 }

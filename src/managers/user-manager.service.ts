@@ -1,4 +1,10 @@
-import { BadRequestException, ConsoleLogger, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConsoleLogger,
+  Inject,
+  Injectable,
+  NotFoundException
+} from '@nestjs/common';
 import { compare, hash } from 'bcrypt';
 import { CqlDbContext } from '@Project.Database/cql.db.service';
 import type {
@@ -91,7 +97,7 @@ export class UserManagerService {
   async update(userId: UserId, data: IUpdateUserDto) {
     const target = await this.model.findOneAsync({ user_id: userId });
     if (!target) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_USER);
+      throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
     }
     const { email, password, oldPassword, username, displayName, bio } = data;
     if (email || password) {
@@ -157,7 +163,7 @@ export class UserManagerService {
   async delete(userId: UserId) {
     const user = await this.model.findOneAsync({ user_id: userId });
     if (!user) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_USER);
+      throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
     }
     user.email = '';
     user.username = `${userId}-del`;
@@ -204,7 +210,7 @@ export class UserManagerService {
     if (cached) return cached;
     const result = (await traversal.hasLabel('User').has('userId', userId).next()).value;
     if (!result) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_USER);
+      throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
     }
     this.cache.set(`user:${userId}:vertex`, result);
     return result;

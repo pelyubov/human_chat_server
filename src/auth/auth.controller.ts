@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { ZodError } from 'zod';
 import {
   Body,
   ConsoleLogger,
@@ -12,9 +11,10 @@ import {
   Res
 } from '@nestjs/common';
 import { LoginDto, ILoginDto } from '@Project.Dtos/user/login.dto';
-import { formatError } from '@Project.Utils/helpers';
+import { todo } from '@Project.Utils/helpers';
 import { AuthService } from './auth.service';
 import { ExceptionStrings } from '@Project.Utils/errors/ExceptionStrings';
+import { controllerErrorHandler } from '@Project.Utils/error-handler';
 
 @Controller('api')
 export class AuthController {
@@ -36,27 +36,29 @@ export class AuthController {
       });
       return response.json({ accessToken: tokens.access });
     } catch (e) {
-      if (e instanceof ZodError) {
-        throw new BadRequestException({ error: formatError(e) });
-      }
-      throw e;
+      controllerErrorHandler(e, this.logger, 'AuthController');
     }
   }
 
   @Post('logout')
   @HttpCode(200)
   async logout(@Headers('authorization') token: string) {
-    const { userId, actualToken } = await this.auth.verify(token);
-    if (!token) {
-      throw new BadRequestException(ExceptionStrings.TOKEN_REQUIRED);
+    try {
+      const { userId, actualToken } = await this.auth.verify(token);
+      if (!token) {
+        throw new BadRequestException(ExceptionStrings.TOKEN_REQUIRED);
+      }
+      this.auth.logout(actualToken, userId.toBigInt());
+      return { message: 'Logout successful' };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'AuthController');
     }
-    this.auth.logout(actualToken, userId.toBigInt());
-    return { message: 'Logout successful' };
   }
 
   @Post('tokens')
   @HttpCode(200)
   async refreshToken(@Req() request: Request) {
+    todo!('Refresh token endpoint not implemented');
     const token = request.cookies.refreshToken;
   }
 }

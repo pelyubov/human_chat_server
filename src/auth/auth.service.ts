@@ -6,11 +6,12 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcrypt';
-import { ILoginDto } from '../dtos/user/login.dto';
+import { ILoginDto, LoginDto } from '@Project.Dtos/user/login.dto';
 import { Long, Nullable } from '@Project.Utils/types';
 import { CqlDbContext } from '@Project.Database/cql.db.service';
 import { ModelInstance } from '@Project.Database/cql/express-cassandra/helpers';
 import type { IUserAuth, IUserMeta } from '@Project.Database/schemas/user.schema';
+import { ExceptionStrings } from '@Project.Utils/errors/ExceptionStrings';
 
 type AccessToken = string;
 type RefreshToken = string;
@@ -36,18 +37,18 @@ export class AuthService {
     return this.cqlDb.model('Users') as ModelInstance<IUserMeta>;
   }
   async login(data: ILoginDto) {
-    const { email, password } = data;
+    const { email, password } = await LoginDto.parseAsync(data);
     const user = (await this.model.findOneAsync(
       { email },
       { select: ['user_id', 'username', 'credentials'], raw: true, allow_filtering: true }
     )) as Nullable<IUserAuth>;
     this.logger.debug(user, 'AuthService');
     if (!user) {
-      throw new NotFoundException({ error: 'User does not exist' });
+      throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
     }
     const isValid = await compare(password, user.credentials);
     if (!isValid) {
-      throw new UnauthorizedException({ error: 'Invalid credentials' });
+      throw new UnauthorizedException(ExceptionStrings.INVALID_CREDENTIALS);
     }
     return this.newTokenPair({
       userId: user.user_id.toString(),
@@ -58,20 +59,20 @@ export class AuthService {
   async verify(token: string) {
     const actualToken = /^Bearer (.+)$/.exec(token)?.[1];
     if (!actualToken) {
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException(ExceptionStrings.TOKEN_INVALID);
     }
     if (!this.activeTokens.has(actualToken)) {
-      throw new UnauthorizedException('Token expired');
+      throw new UnauthorizedException(ExceptionStrings.TOKEN_EXPIRED);
     }
     const tokenData = (await this.jwt.verifyAsync(actualToken)) as TokenMeta;
     if (!tokenData) {
       this.activeTokens.delete(actualToken!);
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException(ExceptionStrings.TOKEN_INVALID);
     }
     // This check might be redundant
     // The token is already "blocked" the moment it's not in the activeTokens map
     // if (tokenData.blocked) {
-    //   throw new UnauthorizedException('Token expired: Blocked');
+    //   throw new UnauthorizedException(ExceptionStrings.TOKEN_BLOCKED);
     // }
     return {
       userId: Long.fromString(tokenData.userId),
@@ -82,13 +83,13 @@ export class AuthService {
   async refresh(refreshToken: string) {
     const actualRToken = /^Bearer (.+)$/.exec(refreshToken)?.[1];
     if (!actualRToken) {
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException(ExceptionStrings.TOKEN_INVALID);
     }
     if (!(await this.jwt.verifyAsync(actualRToken))) {
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException(ExceptionStrings.TOKEN_INVALID);
     }
     if (!this.refreshTokens.has(actualRToken)) {
-      throw new UnauthorizedException('Token expired');
+      throw new UnauthorizedException(ExceptionStrings.TOKEN_EXPIRED);
     }
     const aToken = this.refreshTokens.get(actualRToken);
     if (aToken) {

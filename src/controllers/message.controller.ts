@@ -10,12 +10,14 @@ import {
   Controller,
   Delete,
   Headers,
+  NotFoundException,
   Param,
   Patch,
   Post
 } from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
 import { ExceptionStrings } from '@Project.Utils/errors/ExceptionStrings';
+import { controllerErrorHandler } from '@Project.Utils/error-handler';
 
 @Controller('api/channels')
 export class MessageController {
@@ -26,7 +28,7 @@ export class MessageController {
     private readonly auth: AuthService,
     private readonly logger: ConsoleLogger
   ) {
-    this.logger.log('ChatController initialized', 'ChatController');
+    this.logger.log('MessageController initialized', 'MessageController');
   }
 
   @Post(':channelId/messages')
@@ -35,28 +37,32 @@ export class MessageController {
     @Param('channelId') channelId: bigint,
     @Body() data: IIncomingMessageDto
   ) {
-    const { userId } = await this.auth.verify(token);
-    const user = await this.users.get(userId);
-    if (!user) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_USER);
+    try {
+      const { userId } = await this.auth.verify(token);
+      const user = await this.users.get(userId);
+      if (!user) {
+        throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
+      }
+      const chanId = Long.fromBigInt(channelId);
+      const channel = await this.channels.get(chanId);
+      if (!channel) {
+        throw new NotFoundException(ExceptionStrings.UNKNOWN_CHANNEL);
+      }
+      if (!channel.users.includes(userId.toBigInt())) {
+        throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
+      }
+      const { content, replyTo } = await IncomingMessageDto.parseAsync(data);
+      const message = await this.messages.create(
+        chanId,
+        userId,
+        content,
+        replyTo ? Long.fromString(replyTo) : null
+      );
+      this.channels.sendMessage(chanId, userId, message);
+      return { message: 'Message sent successfully' };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'MessageController');
     }
-    const chanId = Long.fromBigInt(channelId);
-    const channel = await this.channels.get(chanId);
-    if (!channel) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_CHANNEL);
-    }
-    if (!channel.users.includes(userId.toBigInt())) {
-      throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
-    }
-    const { content, replyTo } = await IncomingMessageDto.parseAsync(data);
-    const message = await this.messages.create(
-      chanId,
-      userId,
-      content,
-      replyTo ? Long.fromString(replyTo) : null
-    );
-    this.channels.sendMessage(chanId, userId, message);
-    return { message: 'Message sent successfully' };
   }
 
   @Patch(':channelId/messages/:messageId')
@@ -66,16 +72,20 @@ export class MessageController {
     @Param('messageId') messageId: bigint,
     @Body() data: IIncomingMessageDto
   ) {
-    const { userId } = await this.auth.verify(token);
-    const { content } = await IncomingMessageDto.parseAsync(data);
-    const channel = await this.channels.get(Long.fromBigInt(channelId));
-    if (!channel) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_CHANNEL);
+    try {
+      const { userId } = await this.auth.verify(token);
+      const { content } = await IncomingMessageDto.parseAsync(data);
+      const channel = await this.channels.get(Long.fromBigInt(channelId));
+      if (!channel) {
+        throw new NotFoundException(ExceptionStrings.UNKNOWN_CHANNEL);
+      }
+      if (!channel.users.includes(userId.toBigInt())) {
+        throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
+      }
+      return await this.messages.edit(userId, Long.fromBigInt(messageId), { content });
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'MessageController');
     }
-    if (!channel.users.includes(userId.toBigInt())) {
-      throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
-    }
-    return await this.messages.edit(userId, Long.fromBigInt(messageId), { content });
   }
 
   @Delete(':channelId/messages/:messageId')
@@ -84,14 +94,18 @@ export class MessageController {
     @Param('channelId') channelId: bigint,
     @Param('messageId') messageId: bigint
   ) {
-    const { userId } = await this.auth.verify(token);
-    const channel = await this.channels.get(Long.fromBigInt(channelId));
-    if (!channel) {
-      throw new BadRequestException(ExceptionStrings.UNKNOWN_CHANNEL);
+    try {
+      const { userId } = await this.auth.verify(token);
+      const channel = await this.channels.get(Long.fromBigInt(channelId));
+      if (!channel) {
+        throw new NotFoundException(ExceptionStrings.UNKNOWN_CHANNEL);
+      }
+      if (!channel.users.includes(userId.toBigInt())) {
+        throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
+      }
+      await this.messages.delete(userId, Long.fromBigInt(messageId));
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'MessageController');
     }
-    if (!channel.users.includes(userId.toBigInt())) {
-      throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
-    }
-    await this.messages.delete(userId, Long.fromBigInt(messageId));
   }
 }

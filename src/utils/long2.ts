@@ -1,4 +1,5 @@
 import { types as DataStaxTypes } from 'cassandra-driver';
+import { LongParseError } from './errors/LongParseError';
 
 interface ILong {
   low: number;
@@ -104,27 +105,59 @@ export class Long2 extends DataStaxTypes.Long {
     }
   }
   static fromBigInt(value: bigint): Long2 {
-    return this.fromILong(DataStaxTypes.Long.fromValue(value.toString()));
+    try {
+      return this.fromILong(DataStaxTypes.Long.fromValue(value.toString()));
+    } catch (e) {
+      throw new LongParseError(value);
+    }
   }
   static fromNumber(value: number): Long2 {
-    return this.fromILong(DataStaxTypes.Long.fromNumber(value));
+    try {
+      return this.fromILong(DataStaxTypes.Long.fromNumber(value));
+    } catch (e) {
+      throw new LongParseError(value);
+    }
   }
   static fromString(value: string, radix?: number): Long2 {
-    return this.fromILong(DataStaxTypes.Long.fromString(value, radix));
+    try {
+      return this.fromILong(DataStaxTypes.Long.fromString(value, radix));
+    } catch (e) {
+      throw new LongParseError(value);
+    }
   }
   static fromBits(lowBits: number, highBits: number, unsigned?: boolean): Long2 {
-    return this.fromILong(DataStaxTypes.Long.fromBits(lowBits, highBits, unsigned));
+    try {
+      return this.fromILong(DataStaxTypes.Long.fromBits(lowBits, highBits, unsigned));
+    } catch (e) {
+      throw new LongParseError([lowBits, highBits, unsigned ?? false]);
+    }
   }
   static fromInt(value: number): Long2 {
-    return this.fromILong(DataStaxTypes.Long.fromInt(value));
+    try {
+      return this.fromILong(DataStaxTypes.Long.fromInt(value));
+    } catch (e) {
+      throw new LongParseError(value);
+    }
   }
   static fromBytes(bytes: number[], unsigned?: boolean): Long2 {
-    return this.fromILong(DataStaxTypes.Long.fromBytes(bytes, unsigned));
+    try {
+      return this.fromILong(DataStaxTypes.Long.fromBytes(bytes, unsigned));
+    } catch (e) {
+      throw new LongParseError([bytes, unsigned ?? false]);
+    }
   }
   static fromBytesLE(bytes: number[], unsigned?: boolean): Long2 {
-    return this.fromILong(DataStaxTypes.Long.fromBytesLE(bytes, unsigned));
+    try {
+      return this.fromILong(DataStaxTypes.Long.fromBytesLE(bytes, unsigned));
+    } catch (e) {
+      throw new LongParseError([bytes, unsigned ?? false]);
+    }
   }
   static fromBytesBE(bytes: number[], unsigned?: boolean): Long2 {
-    return this.fromILong(DataStaxTypes.Long.fromBytesBE(bytes, unsigned));
+    try {
+      return this.fromILong(DataStaxTypes.Long.fromBytesBE(bytes, unsigned));
+    } catch (e) {
+      throw new LongParseError([bytes, unsigned ?? false]);
+    }
   }
 }
