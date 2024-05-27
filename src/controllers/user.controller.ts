@@ -63,7 +63,7 @@ export class UserController {
   }
 
   @Get('@me')
-  async selfInfo(@Headers('authorization') token: string) {
+  async userInfo(@Headers('authorization') token: string) {
     try {
       const { userId } = await this.auth.verify(token);
       const user = await this.users.get(userId);
@@ -126,19 +126,23 @@ export class UserController {
     }
   }
 
-  @Delete('@me/requests/:id/reject')
-  async deleteRelation(@Headers('authorization') token: string, @Param('id') id: string) {
+  @Post('@me/requests/new')
+  async sendRequest(@Headers('authorization') token: string, @Body('username') username: string) {
     try {
       const { userId: senderId } = await this.auth.verify(token);
-      await this.users.unfriend(senderId, Long.fromString(id));
-      return { message: 'Friend request rejected successfully.' };
+      const receiverId = await this.users.retrieveUserId(username);
+      if (!receiverId) {
+        throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
+      }
+      await this.users.sendRequest(senderId, receiverId);
+      return { message: 'Friend request sent successfully.' };
     } catch (e) {
       controllerErrorHandler(e, this.logger, 'UserController');
     }
   }
 
   @Put('@me/requests/:id/accept')
-  async acceptFriendRequest(@Headers('authorization') token: string, @Param('id') id: string) {
+  async acceptRequest(@Headers('authorization') token: string, @Param('id') id: string) {
     try {
       const responderId = (await this.auth.verify(token)).userId;
       const requesterId = (await this.users.get(Long.fromString(id)))?.user_id;
@@ -153,26 +157,30 @@ export class UserController {
     }
   }
 
-  @Post('@me/requests/new')
-  async sendFriendRequest(
-    @Headers('authorization') token: string,
-    @Body('username') username: string
-  ) {
+  @Delete('@me/requests/:id')
+  async cancelRequest(@Headers('authorization') token: string, @Param('id') id: string) {
     try {
       const { userId: senderId } = await this.auth.verify(token);
-      const receiverId = await this.users.retrieveUserId(username);
-      if (!receiverId) {
-        throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
-      }
-      await this.users.sendRequest(senderId, receiverId);
-      return { message: 'Friend request sent successfully.' };
+      await this.users.cancelRequest(senderId, Long.fromString(id));
+      return { message: 'Friend request cancelled successfully.' };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'UserController');
+    }
+  }
+
+  @Delete('@me/requests/:id/reject')
+  async rejectRequest(@Headers('authorization') token: string, @Param('id') id: string) {
+    try {
+      const { userId: senderId } = await this.auth.verify(token);
+      await this.users.rejectRequest(senderId, Long.fromString(id));
+      return { message: 'Friend request rejected successfully.' };
     } catch (e) {
       controllerErrorHandler(e, this.logger, 'UserController');
     }
   }
 
   @Get('@me/requests/outgoing')
-  async getFriendRequests(@Headers('authorization') token: string) {
+  async getOutgoingRequests(@Headers('authorization') token: string) {
     try {
       const { userId: requester } = await this.auth.verify(token);
       const requests = await this.users.getIncomingRequests(requester);
@@ -187,7 +195,7 @@ export class UserController {
   }
 
   @Get('@me/requests/incoming')
-  async getIncomingRequestsList(@Headers('authorization') token: string) {
+  async getIncomingRequests(@Headers('authorization') token: string) {
     try {
       const { userId: requester } = await this.auth.verify(token);
       const requests = await this.users.getOutgoingRequests(requester);
@@ -201,12 +209,12 @@ export class UserController {
     }
   }
 
-  @Delete('@me/requests/:id')
-  async cancelFriendRequest(@Headers('authorization') token: string, @Param('id') id: string) {
+  @Delete('@me/friends/:id')
+  async unfriend(@Headers('authorization') token: string, @Param('id') id: string) {
     try {
-      const { userId: senderId } = await this.auth.verify(token);
-      await this.users.cancelRequest(senderId, Long.fromString(id));
-      return { message: 'Friend request cancelled successfully.' };
+      const { userId: removerId } = await this.auth.verify(token);
+      await this.users.unfriend(removerId, Long.fromString(id));
+      return { message: 'Friend removed successfully.' };
     } catch (e) {
       controllerErrorHandler(e, this.logger, 'UserController');
     }

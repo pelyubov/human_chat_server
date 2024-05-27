@@ -36,8 +36,6 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log('WsGateway initialized', 'WsGateway');
   }
 
-  // TODO: Add channels
-  // TODO: Add session IDs for users with multiple connections
   async handleConnection(client: IUserSession, message: IncomingMessage) {
     const token = message.headers.authorization;
     if (!token) {
@@ -95,13 +93,13 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.channels.broadcastEvent('typing', { userId: client.userId }, Long.fromString(channelId));
   }
 
-  @SubscribeMessage('typingStop')
-  async onTypingStop(
+  @SubscribeMessage('typingStopped')
+  async onTypingStopped(
     @ConnectedSocket() client: IUserSession,
     @MessageBody('channelId') channelId: string
   ) {
     this.channels.broadcastEvent(
-      'typingStop',
+      'typingStopped',
       { userId: client.userId },
       Long.fromString(channelId)
     );

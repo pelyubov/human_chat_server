@@ -329,6 +329,31 @@ export class UserManagerService {
     }
   }
 
+  async rejectRequest(responderUID: UserId, requesterUID: UserId) {
+    const responderVertex = await this.getUserVertex(this.graph.V(), responderUID);
+    const requesterVertex = await this.getUserVertex(this.graph.V(), requesterUID);
+    const responderVertexId = responderVertex.id;
+    const requesterVertexId = requesterVertex.id;
+    const outgoingRelationship = await this.getRelationship(responderVertexId, requesterVertexId);
+    switch (outgoingRelationship) {
+      case FriendRelationshipStatus.BLOCKED:
+        throw new BadRequestException(ExceptionStrings.BLOCKED_TO);
+      case FriendRelationshipStatus.FRIEND:
+        throw new BadRequestException(ExceptionStrings.REQUEST_ALREADY_FRIENDS);
+      case FriendRelationshipStatus.PENDING:
+        await this.graph
+          .V(responderVertexId)
+          .outE('relationship')
+          .where(GremlinStatics.inV<UserVertex>().hasId(requesterVertexId))
+          .drop()
+          .iterate();
+        this.ws.broadcast('friendRequestRejected', { from: requesterUID }, [
+          responderUID.toBigInt()
+        ]);
+        break;
+    }
+  }
+
   async getOutgoingRequests(userId: UserId): Promise<UserId[]> {
     const userVertex = await this.getUserVertex(this.graph.V(), userId);
     return await this.graph
@@ -373,7 +398,7 @@ export class UserManagerService {
         .iterate()
     ]);
 
-    this.ws.broadcast('unfriended', { from: receiverUID }, [senderUID.toBigInt()]);
+    this.ws.broadcast('friendRemoved', { from: receiverUID }, [senderUID.toBigInt()]);
   }
 
   async block(senderUID: UserId, receiverUID: UserId) {
