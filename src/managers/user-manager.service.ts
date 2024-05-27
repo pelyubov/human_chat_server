@@ -324,6 +324,7 @@ export class UserManagerService {
           .where(GremlinStatics.inV<UserVertex>().hasId(receiverVertexId))
           .drop()
           .iterate();
+        this.ws.broadcast('friendRequestCancelled', { from: senderUID }, [receiverUID.toBigInt()]);
         break;
     }
   }
@@ -400,9 +401,7 @@ export class UserManagerService {
       .property('relationshipStatus', FriendRelationshipStatus.BLOCKED)
       .next();
 
-    this.ws.broadcast(FriendRelationshipStatus.BLOCKED, { from: senderUID }, [
-      receiverUID.toBigInt()
-    ]);
+    this.ws.broadcast('blocked', { from: senderUID }, [receiverUID.toBigInt()]);
   }
 }
 
