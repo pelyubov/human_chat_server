@@ -82,7 +82,9 @@ export class MessageController {
       if (!channel.users.includes(userId.toBigInt())) {
         throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
       }
-      return await this.messages.edit(userId, Long.fromBigInt(messageId), { content });
+      return {
+        data: await this.messages.edit(userId, Long.fromBigInt(messageId), { content })
+      };
     } catch (e) {
       controllerErrorHandler(e, this.logger, 'MessageController');
     }

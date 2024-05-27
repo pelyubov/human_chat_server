@@ -72,7 +72,11 @@ export class ChannelController {
           };
         })
       );
-      return { channels: channelMetas };
+      return {
+        data: {
+          channels: channelMetas
+        }
+      };
     } catch (e) {
       controllerErrorHandler(e, this.logger, 'ChannelController');
     }
@@ -98,9 +102,11 @@ export class ChannelController {
         throw new BadRequestException(ExceptionStrings.NOT_MEMBER);
       }
       return {
-        id: channelId.toString(),
-        name: channel.name,
-        users: channel.users.map((u) => u.toString())
+        data: {
+          id: channelId.toString(),
+          name: channel.name,
+          users: channel.users.map((u) => u.toString())
+        }
       };
     } catch (e) {
       controllerErrorHandler(e, this.logger, 'ChannelController');
@@ -125,7 +131,7 @@ export class ChannelController {
         limit,
         Long.fromString(lastOldestGetMessageId)
       );
-      return { messages: messages };
+      return { data: { messages } };
     } catch (e) {
       controllerErrorHandler(e, this.logger, 'ChannelController');
     }

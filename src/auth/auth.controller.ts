@@ -34,7 +34,11 @@ export class AuthController {
         httpOnly: true,
         path: '/api/tokens'
       });
-      return response.json({ accessToken: tokens.access });
+      return response.json({
+        data: {
+          accessToken: tokens.access
+        }
+      });
     } catch (e) {
       controllerErrorHandler(e, this.logger, 'AuthController');
     }

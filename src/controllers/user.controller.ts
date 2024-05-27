@@ -39,7 +39,7 @@ export class UserController {
   @Post('check-email')
   async checkEmail(@Body() body: { email: string }) {
     try {
-      return { exists: await this.users.existsEmail(body.email) };
+      return { data: { exists: await this.users.existsEmail(body.email) } };
     } catch (e) {
       controllerErrorHandler(e, this.logger, 'UserController');
     }
@@ -70,7 +70,11 @@ export class UserController {
       if (!user) {
         throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
       }
-      return user;
+      return {
+        data: {
+          user
+        }
+      };
     } catch (e) {
       controllerErrorHandler(e, this.logger, 'UserController');
     }
@@ -171,8 +175,12 @@ export class UserController {
   async getFriendRequests(@Headers('authorization') token: string) {
     try {
       const { userId: requester } = await this.auth.verify(token);
-      const result = await this.users.getIncomingRequests(requester);
-      return result;
+      const requests = await this.users.getIncomingRequests(requester);
+      return {
+        data: {
+          requests
+        }
+      };
     } catch (e) {
       controllerErrorHandler(e, this.logger, 'UserController');
     }
@@ -182,8 +190,12 @@ export class UserController {
   async getIncomingRequestsList(@Headers('authorization') token: string) {
     try {
       const { userId: requester } = await this.auth.verify(token);
-      const result = await this.users.getOutgoingRequests(requester);
-      return result;
+      const requests = await this.users.getOutgoingRequests(requester);
+      return {
+        data: {
+          requests
+        }
+      };
     } catch (e) {
       controllerErrorHandler(e, this.logger, 'UserController');
     }
