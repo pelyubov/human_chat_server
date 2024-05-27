@@ -215,6 +215,11 @@ export class ChannelManagerService {
     }
     if (!chan.isModified('name')) return chan as IChanMeta;
     this.cache.del(`chan:${channelId}`);
+    this.ws.broadcast(
+      'channelMetadata',
+      { channelId, ...data },
+      await this.getChannelMembers(channelId)
+    );
     return (await chan.saveAsync()) as IChanMeta;
   }
 
