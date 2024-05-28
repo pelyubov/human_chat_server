@@ -53,6 +53,10 @@ export class ChannelManagerService {
     return this.gremlin.g;
   }
 
+  invalidateCache(channelId: ChannelId) {
+    this.cache.del(`chan:${channelId}`);
+  }
+
   async get(channelId: ChannelId) {
     const cached = await this.cache.get<IChan>(`chan:${channelId}`);
     if (cached) {
@@ -156,6 +160,72 @@ export class ChannelManagerService {
       this.logger.error(e, 'UserManagerService.createUser');
       throw e;
     }
+  }
+
+  async addMembers(channelId: ChannelId, users: UserId[]) {
+    const channel = await this.get(channelId);
+    if (!channel) {
+      throw new NotFoundException(ExceptionStrings.UNKNOWN_CHANNEL);
+    }
+    const channelVertex = await this.getChannelVertex(this.graph.V(), channelId);
+    const userVertices = await Promise.all(
+      users.map(async (uid) => {
+        const userVertex = await this.users.getUserVertex(this.graph.V(), uid);
+        if (!userVertex) {
+          throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
+        }
+        return userVertex;
+      })
+    );
+
+    const traversal = this.graph.V(channelVertex.id);
+
+    await userVertices
+      .reduce((traversal, uVert) => {
+        return traversal
+          .V(channelVertex.id)
+          .addE('channelMember')
+          .from_(GremlinStatics.V<UserVertex>(uVert.id));
+      }, traversal)
+      .iterate();
+
+    this.ws.broadcast(
+      'channelJoined',
+      { channelId },
+      new Set(users.map((u) => u.toBigInt()).concat(channel.users))
+    );
+  }
+
+  async removeMembers(channelId: ChannelId, users: UserId[]) {
+    const channel = await this.get(channelId);
+    if (!channel) {
+      throw new NotFoundException(ExceptionStrings.UNKNOWN_CHANNEL);
+    }
+    const channelVertex = await this.getChannelVertex(this.graph.V(), channelId);
+    const userVertices = await Promise.all(
+      users.map(async (uid) => {
+        const userVertex = await this.users.getUserVertex(this.graph.V(), uid);
+        if (!userVertex) {
+          throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
+        }
+        return userVertex;
+      })
+    );
+
+    const traversal = this.graph.V(channelVertex.id);
+
+    await userVertices
+      .reduce((traversal, uVert) => {
+        return traversal
+          .V(channelVertex.id)
+          .outE('channelMember')
+          .where(GremlinStatics.inV<UserVertex>().hasId(uVert.id))
+          .drop();
+      }, traversal)
+      .iterate();
+
+    this.ws.broadcast('channelLeft', { channelId }, new Set(channel.users));
+    this.invalidateCache(channelId);
   }
 
   async createInvite(userId: UserId, channelId: ChannelId, ttl?: number) {

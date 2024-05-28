@@ -9,6 +9,7 @@ import {
   ConsoleLogger,
   Controller,
   Delete,
+  Get,
   Headers,
   NotFoundException,
   Param,
@@ -29,6 +30,30 @@ export class MessageController {
     private readonly logger: ConsoleLogger
   ) {
     this.logger.log('MessageController initialized', 'MessageController');
+  }
+
+  @Get('channels/:channelId/messages')
+  async fetchMessages(
+    @Headers('authorization') token: string,
+    @Param('channelId') channelId: string,
+    @Body()
+    data: {
+      lastOldestGetMessageId: string;
+      limit: number;
+    }
+  ) {
+    try {
+      await this.auth.verify(token);
+      const { lastOldestGetMessageId, limit } = data;
+      const messages = await this.messages.getMessages(
+        Long.fromString(channelId),
+        limit,
+        Long.fromString(lastOldestGetMessageId)
+      );
+      return { data: { messages } };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'ChannelController');
+    }
   }
 
   @Post(':channelId/messages')

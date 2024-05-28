@@ -113,30 +113,6 @@ export class ChannelController {
     }
   }
 
-  @Get('channels/:channelId/messages')
-  async fetchMessages(
-    @Headers('authorization') token: string,
-    @Param('channelId') channelId: string,
-    @Body()
-    data: {
-      lastOldestGetMessageId: string;
-      limit: number;
-    }
-  ) {
-    try {
-      await this.auth.verify(token);
-      const { lastOldestGetMessageId, limit } = data;
-      const messages = await this.messages.getMessages(
-        Long.fromString(channelId),
-        limit,
-        Long.fromString(lastOldestGetMessageId)
-      );
-      return { data: { messages } };
-    } catch (e) {
-      controllerErrorHandler(e, this.logger, 'ChannelController');
-    }
-  }
-
   @Patch('channels/:channelId')
   async editChannel(
     @Headers('authorization') token: string,
@@ -235,6 +211,54 @@ export class ChannelController {
       }
       await this.channels.delete(chanId);
       return { message: 'Channel deleted successfully' };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'ChannelController');
+    }
+  }
+
+  @Post(':channelId/members')
+  async addMembers(
+    @Headers('authorization') token: string,
+    @Param('channelId') channelId: bigint,
+    @Body('users') users: IChanCreationDto['users']
+  ) {
+    try {
+      const { userId } = await this.auth.verify(token);
+      const chanId = Long.fromBigInt(channelId);
+      const isOwner = await this.channels.isOwner(userId, chanId);
+      if (!isOwner) {
+        throw new BadRequestException(ExceptionStrings.NOT_OWNER);
+      }
+      const { users: members } = await ChanCreationDto.pick({ users: true }).parseAsync({ users });
+      await this.channels.addMembers(
+        chanId,
+        members.map((u) => Long.fromString(u))
+      );
+      return { message: 'Members added successfully' };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'ChannelController');
+    }
+  }
+
+  @Delete(':channelId/members')
+  async removeMembers(
+    @Headers('authorization') token: string,
+    @Param('channelId') channelId: bigint,
+    @Body('users') users: IChanCreationDto['users']
+  ) {
+    try {
+      const { userId } = await this.auth.verify(token);
+      const chanId = Long.fromBigInt(channelId);
+      const isOwner = await this.channels.isOwner(userId, chanId);
+      if (!isOwner) {
+        throw new BadRequestException(ExceptionStrings.NOT_OWNER);
+      }
+      const { users: members } = await ChanCreationDto.pick({ users: true }).parseAsync({ users });
+      await this.channels.removeMembers(
+        chanId,
+        members.map((u) => Long.fromString(u))
+      );
+      return { message: 'Members removed successfully' };
     } catch (e) {
       controllerErrorHandler(e, this.logger, 'ChannelController');
     }
