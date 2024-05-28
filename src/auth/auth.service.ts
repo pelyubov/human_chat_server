@@ -37,7 +37,7 @@ export class AuthService {
     return this.cqlDb.model('Users') as ModelInstance<IUserMeta>;
   }
   async login(data: ILoginDto) {
-    const { email, password } = await LoginDto.parseAsync(data);
+    const { email, password } = data;
     const user = (await this.model.findOneAsync(
       { email },
       { select: ['user_id', 'username', 'credentials'], raw: true, allow_filtering: true }
@@ -64,20 +64,24 @@ export class AuthService {
     if (!this.activeTokens.has(actualToken)) {
       throw new UnauthorizedException(ExceptionStrings.TOKEN_EXPIRED);
     }
-    const tokenData = (await this.jwt.verifyAsync(actualToken)) as TokenMeta;
-    if (!tokenData) {
-      this.activeTokens.delete(actualToken!);
+    try {
+      const tokenData = (await this.jwt.verifyAsync(actualToken)) as TokenMeta;
+      if (!tokenData) {
+        throw new UnauthorizedException(ExceptionStrings.TOKEN_INVALID);
+      }
+      // This check might be redundant
+      // The token is already "blocked" the moment it's not in the activeTokens map
+      // if (tokenData.blocked) {
+      //   throw new UnauthorizedException(ExceptionStrings.TOKEN_BLOCKED);
+      // }
+      return {
+        userId: Long.fromString(tokenData.userId),
+        actualToken
+      };
+    } catch (e) {
+      this.activeTokens.delete(actualToken);
       throw new UnauthorizedException(ExceptionStrings.TOKEN_INVALID);
     }
-    // This check might be redundant
-    // The token is already "blocked" the moment it's not in the activeTokens map
-    // if (tokenData.blocked) {
-    //   throw new UnauthorizedException(ExceptionStrings.TOKEN_BLOCKED);
-    // }
-    return {
-      userId: Long.fromString(tokenData.userId),
-      actualToken
-    };
   }
 
   async refresh(refreshToken: string) {
@@ -85,7 +89,11 @@ export class AuthService {
     if (!actualRToken) {
       throw new UnauthorizedException(ExceptionStrings.TOKEN_INVALID);
     }
-    if (!(await this.jwt.verifyAsync(actualRToken))) {
+    try {
+      if (!(await this.jwt.verifyAsync(actualRToken))) {
+        throw new UnauthorizedException(ExceptionStrings.TOKEN_INVALID);
+      }
+    } catch (e) {
       throw new UnauthorizedException(ExceptionStrings.TOKEN_INVALID);
     }
     if (!this.refreshTokens.has(actualRToken)) {
