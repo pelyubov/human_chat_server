@@ -82,7 +82,7 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
           event: 'tokenRejected'
         })
       );
-      this.logger.error(`${e.message}, ${e.message}: ${token}`, 'WsGateway.Unauthorized');
+      this.logger.error(`${e.message}, ${e.message}: ${token}`, 'WsGateway');
       client.close();
     }
   }
@@ -93,7 +93,7 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.socketId = socketId;
 
     if (!token) {
-      this.logger.log(`Client(${client.socketId}) has no token`, 'WsGateway.Unauthorized');
+      this.logger.log(`Client(${client.socketId}) has no token`, 'WsGateway');
       this.logger.log(`Sending challenge to Client(${client.socketId})`, 'WsGateway');
       this.authChallenge(client);
       return;
@@ -102,7 +102,7 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const userId = (await this.auth.verify(token)).userId.toBigInt();
       this.onConnectSucessful(client, userId);
     } catch (e) {
-      this.logger.error(`${e.message}, token: ${token}`, 'WsGateway.Unauthorized');
+      this.logger.error(`${e.message}, token: ${token}`, 'WsGateway');
       client.close();
     }
   }
