@@ -32,7 +32,7 @@ export class MessageController {
     this.logger.log('MessageController initialized', 'MessageController');
   }
 
-  @Get('channels/:channelId/messages')
+  @Get(':channelId/messages')
   async fetchMessages(
     @Headers('authorization') token: string,
     @Param('channelId') channelId: string,
@@ -48,7 +48,7 @@ export class MessageController {
       const messages = await this.messages.getMessages(
         Long.fromString(channelId),
         limit,
-        Long.fromString(lastOldestGetMessageId)
+        lastOldestGetMessageId ? Long.fromString(lastOldestGetMessageId) : null
       );
       return { data: { messages } };
     } catch (e) {

@@ -7,4 +7,5 @@ export interface IMessageMeta {
   reply_to: Nullable<MessageId>;
   content: string;
   last_edit: Nullable<number>;
+  created: number;
 }

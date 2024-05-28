@@ -9,7 +9,8 @@ const model: SchemaDefinition<IMessageMeta> = {
     content: 'text',
     last_edit: 'timestamp',
     author_id: 'bigint',
-    channel_id: 'bigint'
+    channel_id: 'bigint',
+    created: 'timestamp'
   },
   key: ['message_id']
 };

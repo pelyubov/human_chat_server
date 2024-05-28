@@ -31,28 +31,25 @@ export class MessageManagerService {
     return this.cqlDb.model('Messages') as ModelInstance<IMessageMeta>;
   }
 
-  async getMessages(channelId: ChannelId, count: number, tokenId: MessageId) {
+  async getMessages(channelId: ChannelId, count: number, tokenId?: Nullable<MessageId>) {
+    // TODO: Should have also set a cluster key.
     const result = await this.model.findAsync(
-      {
-        message_id: {
-          $token: {
-            $lt: tokenId
-          }
+      Object.assign(
+        {
+          channel_id: channelId,
+          $limit: count
         },
-        channel_id: channelId,
-        $limit: count,
-        $orderby: {
-          $desc: ['message_id']
-        }
-      },
+        tokenId ? { message_id: { $lt: tokenId } } : {}
+      ),
       {
+        allow_filtering: true,
         raw: true
       }
     );
     for (const message of result) {
       this.cache.set(`message:${message.message_id}`, message);
     }
-    return result;
+    return result.sort((a, b) => a.created - b.created);
   }
 
   async get(messageId: MessageId) {
@@ -74,13 +71,15 @@ export class MessageManagerService {
     if (replyTo && !(await this.get(replyTo))) {
       throw new BadRequestException('Unknown message.');
     }
+    const now = Date.now();
     const message: IMessageMeta = {
-      message_id: this.snowflake.next(),
+      message_id: this.snowflake.fromTimestamp(now),
       author_id: userId,
       channel_id: channelId,
       content,
       last_edit: null,
-      reply_to: replyTo ?? null
+      reply_to: replyTo ?? null,
+      created: now
     };
     await new this.model(message).saveAsync();
     return message as IMessageMeta;
