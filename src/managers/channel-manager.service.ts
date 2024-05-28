@@ -88,7 +88,7 @@ export class ChannelManagerService {
       name: chanMeta.name,
       users: users.map((u) => u.value.toBigInt())
     };
-    this.logger.debug(chanData, 'ChannelManagerService.fetch.users');
+    this.logger.debug(chanData, 'ChannelManagerService.fetch.channel');
     this.cache.set(`chan:${channelId}`, chanData);
     return chanData;
   }
