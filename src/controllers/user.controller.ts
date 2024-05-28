@@ -37,8 +37,9 @@ export class UserController {
   }
 
   @Get('users/:userId')
-  async userInfo(@Param('userId') userId: string) {
+  async userInfo(@Headers('authorization') token: string, @Param('userId') userId: string) {
     try {
+      await this.auth.verify(token);
       const user = await this.users.get(Long.fromString(userId));
       if (!user) {
         throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
