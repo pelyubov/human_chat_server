@@ -40,7 +40,15 @@ export class UserController {
   async userInfo(@Headers('authorization') token: string, @Param('userId') userId: string) {
     try {
       await this.auth.verify(token);
-      const user = await this.users.get(Long.fromString(userId));
+      const user = await this.users.model.findOneAsync(
+        {
+          user_id: Long.fromString(userId)
+        },
+        {
+          select: ['display_name', 'username', 'bio'],
+          raw: true
+        }
+      );
       if (!user) {
         throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
       }
