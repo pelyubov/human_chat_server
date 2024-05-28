@@ -36,6 +36,25 @@ export class UserController {
     this.logger.log('UserController initialized', 'UserController');
   }
 
+  @Get('users/:userId')
+  async userInfo(@Param('userId') userId: string) {
+    try {
+      const user = await this.users.get(Long.fromString(userId));
+      if (!user) {
+        throw new NotFoundException(ExceptionStrings.UNKNOWN_USER);
+      }
+      return {
+        data: {
+          displayName: user.display_name,
+          username: user.username,
+          bio: user.bio
+        }
+      };
+    } catch (e) {
+      controllerErrorHandler(e, this.logger, 'UserController');
+    }
+  }
+
   @Post('check-email')
   async checkEmail(@Body() body: { email: string }) {
     try {
@@ -63,7 +82,7 @@ export class UserController {
   }
 
   @Get('@me')
-  async userInfo(@Headers('authorization') token: string) {
+  async selfInfo(@Headers('authorization') token: string) {
     try {
       const { userId } = await this.auth.verify(token);
       const user = await this.users.get(userId);
