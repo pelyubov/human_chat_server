@@ -66,6 +66,7 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody('token') token: string
   ) {
     try {
+      clearTimeout(this.challengeTimeouts.get(client.socketId)!);
       const { userId } = await this.auth.verify(token);
       client.userId = userId.toBigInt();
       this.logger.log(`Client(${client.socketId}) passed the token challenge.`, 'WsGateway');
@@ -74,7 +75,6 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
           event: 'tokenAccepted'
         })
       );
-      clearTimeout(this.challengeTimeouts.get(client.socketId)!);
       this.onConnectSucessful(client, userId.toBigInt());
     } catch (e) {
       client.send(
