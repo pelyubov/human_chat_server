@@ -60,7 +60,7 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
   }
 
-  @SubscribeMessage('tokenResponse')
+  @SubscribeMessage('tokenChallengeResponse')
   async onTokenResponse(
     @ConnectedSocket() client: IUserSession,
     @MessageBody('token') token: string
